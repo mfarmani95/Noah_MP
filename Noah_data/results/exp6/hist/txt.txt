@@ -1,0 +1,2 @@
+this folder contains all the monthly means 
+example: Noah.monthlymean.198001.nc
