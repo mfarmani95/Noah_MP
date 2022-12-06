@@ -1,1 +1,2 @@
 
+Daily outputs of Noah_MP model will be in this folder.
