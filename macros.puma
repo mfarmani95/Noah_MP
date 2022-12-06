@@ -1,0 +1,13 @@
+.IGNORE:
+RM		=	rm -f
+#COMPILER90=	gfortran -fopenmp -O3
+COMPILER90=	gfortran -fopenmp -fbounds-check -O3
+FREESOURCE=	-ffree-form
+F90FLAGS  =     -c -I/home/u4/niug/5TB/usr/include
+MODFLAG	=	
+LDFLAGS	 =
+CPP	=       cpp
+CPPFLAGS	= 	-C -P -traditional -x f95-cpp-input
+#F90FLAGS  =     -c -I/cm/shared/apps/netcdf/gcc/64/4.5.0/include
+#F90FLAGS  =     -c -I/cm/shared/uaapps/netcdf/fortran/gcc/4.4.4/include
+#F90FLAGS  =     -c -I/home/u4/niug/netcdf-fort-4.4.4/include

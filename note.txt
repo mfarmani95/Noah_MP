@@ -1,0 +1,6 @@
+exp1:   Run-CH  -> CH; HTOPMAX = 20. mm
+exp2:   Run-VG0 -> VG; HTOPMAX = 20. mm
+exp3:   Run-VG1 -> VG; HTOPMAX = 0.  mm
+exp4:   Run-VG2 -> VG; HTOPMAX = 10. mm
+exp5:   Run-VG3 -> VG; HTOPMAX = 10. mm; the bottom 2 layer's dz = 2.0 m
+exp6:   Run-VG3 -> VG; HTOPMAX = 50. mm; variable soil depth
