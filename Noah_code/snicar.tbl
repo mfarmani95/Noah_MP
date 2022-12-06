@@ -1,0 +1,1076 @@
+
+  subroutine read_esm_snicar_parameters()
+    implicit none
+    integer :: ierr
+    logical :: file_named 
+
+	REAL :: ext_mie_bd1(NRADI)
+	REAL :: ext_mie_bd2(NRADI)
+	REAL :: ext_mie_bd3(NRADI)
+	REAL :: ext_mie_bd4(NRADI)
+	REAL :: ext_mie_bd5(NRADI)
+	REAL :: w_mie_bd1  (NRADI)
+	REAL :: w_mie_bd2  (NRADI)
+	REAL :: w_mie_bd3  (NRADI)
+	REAL :: w_mie_bd4  (NRADI)
+	REAL :: w_mie_bd5  (NRADI)
+	REAL :: g1_mie_bd1 (NRADI)
+	REAL :: g1_mie_bd2 (NRADI)
+	REAL :: g1_mie_bd3 (NRADI)
+	REAL :: g1_mie_bd4 (NRADI)
+        REAL :: g1_mie_bd5 (NRADI)
+	REAL :: g2_mie_bd1 (NRADI)
+	REAL :: g2_mie_bd2 (NRADI)
+	REAL :: g2_mie_bd3 (NRADI)
+	REAL :: g2_mie_bd4 (NRADI)
+        REAL :: g2_mie_bd5 (NRADI)
+	REAL :: g3_mie_bd1 (NRADI)
+	REAL :: g3_mie_bd2 (NRADI)
+	REAL :: g3_mie_bd3 (NRADI)
+	REAL :: g3_mie_bd4 (NRADI)
+        REAL :: g3_mie_bd5 (NRADI)
+	REAL :: g4_mie_bd1 (NRADI)
+	REAL :: g4_mie_bd2 (NRADI)
+	REAL :: g4_mie_bd3 (NRADI)
+	REAL :: g4_mie_bd4 (NRADI)
+        REAL :: g4_mie_bd5 (NRADI)
+	REAL :: ext_mie_lap_bd1(7)
+	REAL :: ext_mie_lap_bd2(7)
+	REAL :: ext_mie_lap_bd3(7)
+        REAL :: ext_mie_lap_bd4(7)
+	REAL :: ext_mie_lap_bd5(7)
+        REAL :: w_mie_lap_bd1  (7)
+	REAL :: w_mie_lap_bd2  (7)
+	REAL :: w_mie_lap_bd3  (7)
+        REAL :: w_mie_lap_bd4  (7)
+	REAL :: w_mie_lap_bd5  (7)
+	REAL :: g_mie_lap_bd1  (7)
+	REAL :: g_mie_lap_bd2  (7)
+	REAL :: g_mie_lap_bd3  (7)
+	REAL :: g_mie_lap_bd4  (7)
+	REAL :: g_mie_lap_bd5  (7)
+
+	REAL :: T(11)
+	REAL :: sno_dns(8)
+	REAL :: dTdz(31)
+
+    REAL, DIMENSION(11) :: drdt0_1_1,drdt0_1_2,drdt0_1_3,drdt0_1_4,drdt0_1_5,drdt0_1_6,drdt0_1_7,drdt0_1_8,drdt0_1_9,drdt0_1_10, &
+                           drdt0_1_11,drdt0_1_12,drdt0_1_13,drdt0_1_14,drdt0_1_15,drdt0_1_16,drdt0_1_17,drdt0_1_18,drdt0_1_19,drdt0_1_20, & 
+                           drdt0_1_21,drdt0_1_22,drdt0_1_23,drdt0_1_24,drdt0_1_25,drdt0_1_26,drdt0_1_27,drdt0_1_28,drdt0_1_29,drdt0_1_30, drdt0_1_31
+    REAL, DIMENSION(11) :: drdt0_2_1,drdt0_2_2,drdt0_2_3,drdt0_2_4,drdt0_2_5,drdt0_2_6,drdt0_2_7,drdt0_2_8,drdt0_2_9,drdt0_2_10, &
+                           drdt0_2_11,drdt0_2_12,drdt0_2_13,drdt0_2_14,drdt0_2_15,drdt0_2_16,drdt0_2_17,drdt0_2_18,drdt0_2_19,drdt0_2_20, & 
+                           drdt0_2_21,drdt0_2_22,drdt0_2_23,drdt0_2_24,drdt0_2_25,drdt0_2_26,drdt0_2_27,drdt0_2_28,drdt0_2_29,drdt0_2_30, drdt0_2_31 
+    REAL, DIMENSION(11) :: drdt0_3_1,drdt0_3_2,drdt0_3_3,drdt0_3_4,drdt0_3_5,drdt0_3_6,drdt0_3_7,drdt0_3_8,drdt0_3_9,drdt0_3_10, &
+                           drdt0_3_11,drdt0_3_12,drdt0_3_13,drdt0_3_14,drdt0_3_15,drdt0_3_16,drdt0_3_17,drdt0_3_18,drdt0_3_19,drdt0_3_20, & 
+                           drdt0_3_21,drdt0_3_22,drdt0_3_23,drdt0_3_24,drdt0_3_25,drdt0_3_26,drdt0_3_27,drdt0_3_28,drdt0_3_29,drdt0_3_30, drdt0_3_31 
+    REAL, DIMENSION(11) :: drdt0_4_1,drdt0_4_2,drdt0_4_3,drdt0_4_4,drdt0_4_5,drdt0_4_6,drdt0_4_7,drdt0_4_8,drdt0_4_9,drdt0_4_10, &
+                           drdt0_4_11,drdt0_4_12,drdt0_4_13,drdt0_4_14,drdt0_4_15,drdt0_4_16,drdt0_4_17,drdt0_4_18,drdt0_4_19,drdt0_4_20, & 
+                           drdt0_4_21,drdt0_4_22,drdt0_4_23,drdt0_4_24,drdt0_4_25,drdt0_4_26,drdt0_4_27,drdt0_4_28,drdt0_4_29,drdt0_4_30, drdt0_4_31 
+    REAL, DIMENSION(11) :: drdt0_5_1,drdt0_5_2,drdt0_5_3,drdt0_5_4,drdt0_5_5,drdt0_5_6,drdt0_5_7,drdt0_5_8,drdt0_5_9,drdt0_5_10, &
+                           drdt0_5_11,drdt0_5_12,drdt0_5_13,drdt0_5_14,drdt0_5_15,drdt0_5_16,drdt0_5_17,drdt0_5_18,drdt0_5_19,drdt0_5_20, & 
+                           drdt0_5_21,drdt0_5_22,drdt0_5_23,drdt0_5_24,drdt0_5_25,drdt0_5_26,drdt0_5_27,drdt0_5_28,drdt0_5_29,drdt0_5_30, drdt0_5_31 
+    REAL, DIMENSION(11) :: drdt0_6_1,drdt0_6_2,drdt0_6_3,drdt0_6_4,drdt0_6_5,drdt0_6_6,drdt0_6_7,drdt0_6_8,drdt0_6_9,drdt0_6_10, &
+                           drdt0_6_11,drdt0_6_12,drdt0_6_13,drdt0_6_14,drdt0_6_15,drdt0_6_16,drdt0_6_17,drdt0_6_18,drdt0_6_19,drdt0_6_20, & 
+                           drdt0_6_21,drdt0_6_22,drdt0_6_23,drdt0_6_24,drdt0_6_25,drdt0_6_26,drdt0_6_27,drdt0_6_28,drdt0_6_29,drdt0_6_30, drdt0_6_31 
+    REAL, DIMENSION(11) :: drdt0_7_1,drdt0_7_2,drdt0_7_3,drdt0_7_4,drdt0_7_5,drdt0_7_6,drdt0_7_7,drdt0_7_8,drdt0_7_9,drdt0_7_10, &
+                           drdt0_7_11,drdt0_7_12,drdt0_7_13,drdt0_7_14,drdt0_7_15,drdt0_7_16,drdt0_7_17,drdt0_7_18,drdt0_7_19,drdt0_7_20, & 
+                           drdt0_7_21,drdt0_7_22,drdt0_7_23,drdt0_7_24,drdt0_7_25,drdt0_7_26,drdt0_7_27,drdt0_7_28,drdt0_7_29,drdt0_7_30, drdt0_7_31 
+    REAL, DIMENSION(11) :: drdt0_8_1,drdt0_8_2,drdt0_8_3,drdt0_8_4,drdt0_8_5,drdt0_8_6,drdt0_8_7,drdt0_8_8,drdt0_8_9,drdt0_8_10, &
+                           drdt0_8_11,drdt0_8_12,drdt0_8_13,drdt0_8_14,drdt0_8_15,drdt0_8_16,drdt0_8_17,drdt0_8_18,drdt0_8_19,drdt0_8_20, & 
+                           drdt0_8_21,drdt0_8_22,drdt0_8_23,drdt0_8_24,drdt0_8_25,drdt0_8_26,drdt0_8_27,drdt0_8_28,drdt0_8_29,drdt0_8_30, drdt0_8_31 
+
+    REAL, DIMENSION(11) :: kappa_1_1,kappa_1_2,kappa_1_3,kappa_1_4,kappa_1_5,kappa_1_6,kappa_1_7,kappa_1_8,kappa_1_9,kappa_1_10, &
+                           kappa_1_11,kappa_1_12,kappa_1_13,kappa_1_14,kappa_1_15,kappa_1_16,kappa_1_17,kappa_1_18,kappa_1_19,kappa_1_20, & 
+                           kappa_1_21,kappa_1_22,kappa_1_23,kappa_1_24,kappa_1_25,kappa_1_26,kappa_1_27,kappa_1_28,kappa_1_29,kappa_1_30, kappa_1_31
+    REAL, DIMENSION(11) :: kappa_2_1,kappa_2_2,kappa_2_3,kappa_2_4,kappa_2_5,kappa_2_6,kappa_2_7,kappa_2_8,kappa_2_9,kappa_2_10, &
+                           kappa_2_11,kappa_2_12,kappa_2_13,kappa_2_14,kappa_2_15,kappa_2_16,kappa_2_17,kappa_2_18,kappa_2_19,kappa_2_20, & 
+                           kappa_2_21,kappa_2_22,kappa_2_23,kappa_2_24,kappa_2_25,kappa_2_26,kappa_2_27,kappa_2_28,kappa_2_29,kappa_2_30, kappa_2_31 
+    REAL, DIMENSION(11) :: kappa_3_1,kappa_3_2,kappa_3_3,kappa_3_4,kappa_3_5,kappa_3_6,kappa_3_7,kappa_3_8,kappa_3_9,kappa_3_10, &
+                           kappa_3_11,kappa_3_12,kappa_3_13,kappa_3_14,kappa_3_15,kappa_3_16,kappa_3_17,kappa_3_18,kappa_3_19,kappa_3_20, & 
+                           kappa_3_21,kappa_3_22,kappa_3_23,kappa_3_24,kappa_3_25,kappa_3_26,kappa_3_27,kappa_3_28,kappa_3_29,kappa_3_30, kappa_3_31 
+    REAL, DIMENSION(11) :: kappa_4_1,kappa_4_2,kappa_4_3,kappa_4_4,kappa_4_5,kappa_4_6,kappa_4_7,kappa_4_8,kappa_4_9,kappa_4_10, &
+                           kappa_4_11,kappa_4_12,kappa_4_13,kappa_4_14,kappa_4_15,kappa_4_16,kappa_4_17,kappa_4_18,kappa_4_19,kappa_4_20, & 
+                           kappa_4_21,kappa_4_22,kappa_4_23,kappa_4_24,kappa_4_25,kappa_4_26,kappa_4_27,kappa_4_28,kappa_4_29,kappa_4_30, kappa_4_31 
+    REAL, DIMENSION(11) :: kappa_5_1,kappa_5_2,kappa_5_3,kappa_5_4,kappa_5_5,kappa_5_6,kappa_5_7,kappa_5_8,kappa_5_9,kappa_5_10, &
+                           kappa_5_11,kappa_5_12,kappa_5_13,kappa_5_14,kappa_5_15,kappa_5_16,kappa_5_17,kappa_5_18,kappa_5_19,kappa_5_20, & 
+                           kappa_5_21,kappa_5_22,kappa_5_23,kappa_5_24,kappa_5_25,kappa_5_26,kappa_5_27,kappa_5_28,kappa_5_29,kappa_5_30, kappa_5_31 
+    REAL, DIMENSION(11) :: kappa_6_1,kappa_6_2,kappa_6_3,kappa_6_4,kappa_6_5,kappa_6_6,kappa_6_7,kappa_6_8,kappa_6_9,kappa_6_10, &
+                           kappa_6_11,kappa_6_12,kappa_6_13,kappa_6_14,kappa_6_15,kappa_6_16,kappa_6_17,kappa_6_18,kappa_6_19,kappa_6_20, & 
+                           kappa_6_21,kappa_6_22,kappa_6_23,kappa_6_24,kappa_6_25,kappa_6_26,kappa_6_27,kappa_6_28,kappa_6_29,kappa_6_30, kappa_6_31 
+    REAL, DIMENSION(11) :: kappa_7_1,kappa_7_2,kappa_7_3,kappa_7_4,kappa_7_5,kappa_7_6,kappa_7_7,kappa_7_8,kappa_7_9,kappa_7_10, &
+                           kappa_7_11,kappa_7_12,kappa_7_13,kappa_7_14,kappa_7_15,kappa_7_16,kappa_7_17,kappa_7_18,kappa_7_19,kappa_7_20, & 
+                           kappa_7_21,kappa_7_22,kappa_7_23,kappa_7_24,kappa_7_25,kappa_7_26,kappa_7_27,kappa_7_28,kappa_7_29,kappa_7_30, kappa_7_31 
+    REAL, DIMENSION(11) :: kappa_8_1,kappa_8_2,kappa_8_3,kappa_8_4,kappa_8_5,kappa_8_6,kappa_8_7,kappa_8_8,kappa_8_9,kappa_8_10, &
+                           kappa_8_11,kappa_8_12,kappa_8_13,kappa_8_14,kappa_8_15,kappa_8_16,kappa_8_17,kappa_8_18,kappa_8_19,kappa_8_20, & 
+                           kappa_8_21,kappa_8_22,kappa_8_23,kappa_8_24,kappa_8_25,kappa_8_26,kappa_8_27,kappa_8_28,kappa_8_29,kappa_8_30, kappa_8_31 
+
+    REAL, DIMENSION(11) :: tau_1_1,tau_1_2,tau_1_3,tau_1_4,tau_1_5,tau_1_6,tau_1_7,tau_1_8,tau_1_9,tau_1_10, &
+                           tau_1_11,tau_1_12,tau_1_13,tau_1_14,tau_1_15,tau_1_16,tau_1_17,tau_1_18,tau_1_19,tau_1_20, & 
+                           tau_1_21,tau_1_22,tau_1_23,tau_1_24,tau_1_25,tau_1_26,tau_1_27,tau_1_28,tau_1_29,tau_1_30, tau_1_31
+    REAL, DIMENSION(11) :: tau_2_1,tau_2_2,tau_2_3,tau_2_4,tau_2_5,tau_2_6,tau_2_7,tau_2_8,tau_2_9,tau_2_10, &
+                           tau_2_11,tau_2_12,tau_2_13,tau_2_14,tau_2_15,tau_2_16,tau_2_17,tau_2_18,tau_2_19,tau_2_20, & 
+                           tau_2_21,tau_2_22,tau_2_23,tau_2_24,tau_2_25,tau_2_26,tau_2_27,tau_2_28,tau_2_29,tau_2_30, tau_2_31 
+    REAL, DIMENSION(11) :: tau_3_1,tau_3_2,tau_3_3,tau_3_4,tau_3_5,tau_3_6,tau_3_7,tau_3_8,tau_3_9,tau_3_10, &
+                           tau_3_11,tau_3_12,tau_3_13,tau_3_14,tau_3_15,tau_3_16,tau_3_17,tau_3_18,tau_3_19,tau_3_20, & 
+                           tau_3_21,tau_3_22,tau_3_23,tau_3_24,tau_3_25,tau_3_26,tau_3_27,tau_3_28,tau_3_29,tau_3_30, tau_3_31 
+    REAL, DIMENSION(11) :: tau_4_1,tau_4_2,tau_4_3,tau_4_4,tau_4_5,tau_4_6,tau_4_7,tau_4_8,tau_4_9,tau_4_10, &
+                           tau_4_11,tau_4_12,tau_4_13,tau_4_14,tau_4_15,tau_4_16,tau_4_17,tau_4_18,tau_4_19,tau_4_20, & 
+                           tau_4_21,tau_4_22,tau_4_23,tau_4_24,tau_4_25,tau_4_26,tau_4_27,tau_4_28,tau_4_29,tau_4_30, tau_4_31 
+    REAL, DIMENSION(11) :: tau_5_1,tau_5_2,tau_5_3,tau_5_4,tau_5_5,tau_5_6,tau_5_7,tau_5_8,tau_5_9,tau_5_10, &
+                           tau_5_11,tau_5_12,tau_5_13,tau_5_14,tau_5_15,tau_5_16,tau_5_17,tau_5_18,tau_5_19,tau_5_20, & 
+                           tau_5_21,tau_5_22,tau_5_23,tau_5_24,tau_5_25,tau_5_26,tau_5_27,tau_5_28,tau_5_29,tau_5_30, tau_5_31 
+    REAL, DIMENSION(11) :: tau_6_1,tau_6_2,tau_6_3,tau_6_4,tau_6_5,tau_6_6,tau_6_7,tau_6_8,tau_6_9,tau_6_10, &
+                           tau_6_11,tau_6_12,tau_6_13,tau_6_14,tau_6_15,tau_6_16,tau_6_17,tau_6_18,tau_6_19,tau_6_20, & 
+                           tau_6_21,tau_6_22,tau_6_23,tau_6_24,tau_6_25,tau_6_26,tau_6_27,tau_6_28,tau_6_29,tau_6_30, tau_6_31 
+    REAL, DIMENSION(11) :: tau_7_1,tau_7_2,tau_7_3,tau_7_4,tau_7_5,tau_7_6,tau_7_7,tau_7_8,tau_7_9,tau_7_10, &
+                           tau_7_11,tau_7_12,tau_7_13,tau_7_14,tau_7_15,tau_7_16,tau_7_17,tau_7_18,tau_7_19,tau_7_20, & 
+                           tau_7_21,tau_7_22,tau_7_23,tau_7_24,tau_7_25,tau_7_26,tau_7_27,tau_7_28,tau_7_29,tau_7_30, tau_7_31 
+    REAL, DIMENSION(11) :: tau_8_1,tau_8_2,tau_8_3,tau_8_4,tau_8_5,tau_8_6,tau_8_7,tau_8_8,tau_8_9,tau_8_10, &
+                           tau_8_11,tau_8_12,tau_8_13,tau_8_14,tau_8_15,tau_8_16,tau_8_17,tau_8_18,tau_8_19,tau_8_20, & 
+                           tau_8_21,tau_8_22,tau_8_23,tau_8_24,tau_8_25,tau_8_26,tau_8_27,tau_8_28,tau_8_29,tau_8_30, tau_8_31 
+
+    NAMELIST / noahmp_esm_snicar_parameters / ext_mie_bd1, ext_mie_bd2, ext_mie_bd3, ext_mie_bd4, ext_mie_bd5, &
+                           w_mie_bd1 , w_mie_bd2 , w_mie_bd3 , w_mie_bd4 , w_mie_bd5 , &
+                           g1_mie_bd1, g1_mie_bd2, g1_mie_bd3, g1_mie_bd4, g1_mie_bd5, &
+                           g2_mie_bd1, g2_mie_bd2, g2_mie_bd3, g2_mie_bd4, g2_mie_bd5, &
+                           g3_mie_bd1, g3_mie_bd2, g3_mie_bd3, g3_mie_bd4, g3_mie_bd5, &
+                           g4_mie_bd1, g4_mie_bd2, g4_mie_bd3, g4_mie_bd4, g4_mie_bd5, &
+                           ext_mie_lap_bd1, ext_mie_lap_bd2, ext_mie_lap_bd3, ext_mie_lap_bd4, ext_mie_lap_bd5, &
+                           w_mie_lap_bd1, w_mie_lap_bd2, w_mie_lap_bd3, w_mie_lap_bd4, w_mie_lap_bd5, &
+                           g_mie_lap_bd1, g_mie_lap_bd2, g_mie_lap_bd3, g_mie_lap_bd4, g_mie_lap_bd5
+
+    NAMELIST / noahmp_snow_aging_parameters / T, sno_dns, dTdz, &
+                           drdt0_1_1,drdt0_1_2,drdt0_1_3,drdt0_1_4,drdt0_1_5,drdt0_1_6,drdt0_1_7,drdt0_1_8,drdt0_1_9,drdt0_1_10, &
+                           drdt0_1_11,drdt0_1_12,drdt0_1_13,drdt0_1_14,drdt0_1_15,drdt0_1_16,drdt0_1_17,drdt0_1_18,drdt0_1_19,drdt0_1_20, & 
+                           drdt0_1_21,drdt0_1_22,drdt0_1_23,drdt0_1_24,drdt0_1_25,drdt0_1_26,drdt0_1_27,drdt0_1_28,drdt0_1_29,drdt0_1_30, drdt0_1_31, &
+                           drdt0_2_1,drdt0_2_2,drdt0_2_3,drdt0_2_4,drdt0_2_5,drdt0_2_6,drdt0_2_7,drdt0_2_8,drdt0_2_9,drdt0_2_10, &
+                           drdt0_2_11,drdt0_2_12,drdt0_2_13,drdt0_2_14,drdt0_2_15,drdt0_2_16,drdt0_2_17,drdt0_2_18,drdt0_2_19,drdt0_2_20, & 
+                           drdt0_2_21,drdt0_2_22,drdt0_2_23,drdt0_2_24,drdt0_2_25,drdt0_2_26,drdt0_2_27,drdt0_2_28,drdt0_2_29,drdt0_2_30, drdt0_2_31, &
+                           drdt0_3_1,drdt0_3_2,drdt0_3_3,drdt0_3_4,drdt0_3_5,drdt0_3_6,drdt0_3_7,drdt0_3_8,drdt0_3_9,drdt0_3_10, &
+                           drdt0_3_11,drdt0_3_12,drdt0_3_13,drdt0_3_14,drdt0_3_15,drdt0_3_16,drdt0_3_17,drdt0_3_18,drdt0_3_19,drdt0_3_20, & 
+                           drdt0_3_21,drdt0_3_22,drdt0_3_23,drdt0_3_24,drdt0_3_25,drdt0_3_26,drdt0_3_27,drdt0_3_28,drdt0_3_29,drdt0_3_30, drdt0_3_31, &
+                           drdt0_4_1,drdt0_4_2,drdt0_4_3,drdt0_4_4,drdt0_4_5,drdt0_4_6,drdt0_4_7,drdt0_4_8,drdt0_4_9,drdt0_4_10, &
+                           drdt0_4_11,drdt0_4_12,drdt0_4_13,drdt0_4_14,drdt0_4_15,drdt0_4_16,drdt0_4_17,drdt0_4_18,drdt0_4_19,drdt0_4_20, & 
+                           drdt0_4_21,drdt0_4_22,drdt0_4_23,drdt0_4_24,drdt0_4_25,drdt0_4_26,drdt0_4_27,drdt0_4_28,drdt0_4_29,drdt0_4_30, drdt0_4_31, & 
+                           drdt0_5_1,drdt0_5_2,drdt0_5_3,drdt0_5_4,drdt0_5_5,drdt0_5_6,drdt0_5_7,drdt0_5_8,drdt0_5_9,drdt0_5_10, &
+                           drdt0_5_11,drdt0_5_12,drdt0_5_13,drdt0_5_14,drdt0_5_15,drdt0_5_16,drdt0_5_17,drdt0_5_18,drdt0_5_19,drdt0_5_20, & 
+                           drdt0_5_21,drdt0_5_22,drdt0_5_23,drdt0_5_24,drdt0_5_25,drdt0_5_26,drdt0_5_27,drdt0_5_28,drdt0_5_29,drdt0_5_30, drdt0_5_31, &
+                           drdt0_6_1,drdt0_6_2,drdt0_6_3,drdt0_6_4,drdt0_6_5,drdt0_6_6,drdt0_6_7,drdt0_6_8,drdt0_6_9,drdt0_6_10, &
+                           drdt0_6_11,drdt0_6_12,drdt0_6_13,drdt0_6_14,drdt0_6_15,drdt0_6_16,drdt0_6_17,drdt0_6_18,drdt0_6_19,drdt0_6_20, & 
+                           drdt0_6_21,drdt0_6_22,drdt0_6_23,drdt0_6_24,drdt0_6_25,drdt0_6_26,drdt0_6_27,drdt0_6_28,drdt0_6_29,drdt0_6_30, drdt0_6_31, & 
+                           drdt0_7_1,drdt0_7_2,drdt0_7_3,drdt0_7_4,drdt0_7_5,drdt0_7_6,drdt0_7_7,drdt0_7_8,drdt0_7_9,drdt0_7_10, &
+                           drdt0_7_11,drdt0_7_12,drdt0_7_13,drdt0_7_14,drdt0_7_15,drdt0_7_16,drdt0_7_17,drdt0_7_18,drdt0_7_19,drdt0_7_20, & 
+                           drdt0_7_21,drdt0_7_22,drdt0_7_23,drdt0_7_24,drdt0_7_25,drdt0_7_26,drdt0_7_27,drdt0_7_28,drdt0_7_29,drdt0_7_30, drdt0_7_31, & 
+                           drdt0_8_1,drdt0_8_2,drdt0_8_3,drdt0_8_4,drdt0_8_5,drdt0_8_6,drdt0_8_7,drdt0_8_8,drdt0_8_9,drdt0_8_10, &
+                           drdt0_8_11,drdt0_8_12,drdt0_8_13,drdt0_8_14,drdt0_8_15,drdt0_8_16,drdt0_8_17,drdt0_8_18,drdt0_8_19,drdt0_8_20, & 
+                           drdt0_8_21,drdt0_8_22,drdt0_8_23,drdt0_8_24,drdt0_8_25,drdt0_8_26,drdt0_8_27,drdt0_8_28,drdt0_8_29,drdt0_8_30, drdt0_8_31, & 
+
+                           kappa_1_1,kappa_1_2,kappa_1_3,kappa_1_4,kappa_1_5,kappa_1_6,kappa_1_7,kappa_1_8,kappa_1_9,kappa_1_10, &
+                           kappa_1_11,kappa_1_12,kappa_1_13,kappa_1_14,kappa_1_15,kappa_1_16,kappa_1_17,kappa_1_18,kappa_1_19,kappa_1_20, & 
+                           kappa_1_21,kappa_1_22,kappa_1_23,kappa_1_24,kappa_1_25,kappa_1_26,kappa_1_27,kappa_1_28,kappa_1_29,kappa_1_30, kappa_1_31, &
+                           kappa_2_1,kappa_2_2,kappa_2_3,kappa_2_4,kappa_2_5,kappa_2_6,kappa_2_7,kappa_2_8,kappa_2_9,kappa_2_10, &
+                           kappa_2_11,kappa_2_12,kappa_2_13,kappa_2_14,kappa_2_15,kappa_2_16,kappa_2_17,kappa_2_18,kappa_2_19,kappa_2_20, & 
+                           kappa_2_21,kappa_2_22,kappa_2_23,kappa_2_24,kappa_2_25,kappa_2_26,kappa_2_27,kappa_2_28,kappa_2_29,kappa_2_30, kappa_2_31, &
+                           kappa_3_1,kappa_3_2,kappa_3_3,kappa_3_4,kappa_3_5,kappa_3_6,kappa_3_7,kappa_3_8,kappa_3_9,kappa_3_10, &
+                           kappa_3_11,kappa_3_12,kappa_3_13,kappa_3_14,kappa_3_15,kappa_3_16,kappa_3_17,kappa_3_18,kappa_3_19,kappa_3_20, & 
+                           kappa_3_21,kappa_3_22,kappa_3_23,kappa_3_24,kappa_3_25,kappa_3_26,kappa_3_27,kappa_3_28,kappa_3_29,kappa_3_30, kappa_3_31, &
+                           kappa_4_1,kappa_4_2,kappa_4_3,kappa_4_4,kappa_4_5,kappa_4_6,kappa_4_7,kappa_4_8,kappa_4_9,kappa_4_10, &
+                           kappa_4_11,kappa_4_12,kappa_4_13,kappa_4_14,kappa_4_15,kappa_4_16,kappa_4_17,kappa_4_18,kappa_4_19,kappa_4_20, & 
+                           kappa_4_21,kappa_4_22,kappa_4_23,kappa_4_24,kappa_4_25,kappa_4_26,kappa_4_27,kappa_4_28,kappa_4_29,kappa_4_30, kappa_4_31, &
+                           kappa_5_1,kappa_5_2,kappa_5_3,kappa_5_4,kappa_5_5,kappa_5_6,kappa_5_7,kappa_5_8,kappa_5_9,kappa_5_10, &
+                           kappa_5_11,kappa_5_12,kappa_5_13,kappa_5_14,kappa_5_15,kappa_5_16,kappa_5_17,kappa_5_18,kappa_5_19,kappa_5_20, & 
+                           kappa_5_21,kappa_5_22,kappa_5_23,kappa_5_24,kappa_5_25,kappa_5_26,kappa_5_27,kappa_5_28,kappa_5_29,kappa_5_30, kappa_5_31, &
+                           kappa_6_1,kappa_6_2,kappa_6_3,kappa_6_4,kappa_6_5,kappa_6_6,kappa_6_7,kappa_6_8,kappa_6_9,kappa_6_10, &
+                           kappa_6_11,kappa_6_12,kappa_6_13,kappa_6_14,kappa_6_15,kappa_6_16,kappa_6_17,kappa_6_18,kappa_6_19,kappa_6_20, & 
+                           kappa_6_21,kappa_6_22,kappa_6_23,kappa_6_24,kappa_6_25,kappa_6_26,kappa_6_27,kappa_6_28,kappa_6_29,kappa_6_30, kappa_6_31, &
+                           kappa_7_1,kappa_7_2,kappa_7_3,kappa_7_4,kappa_7_5,kappa_7_6,kappa_7_7,kappa_7_8,kappa_7_9,kappa_7_10, &
+                           kappa_7_11,kappa_7_12,kappa_7_13,kappa_7_14,kappa_7_15,kappa_7_16,kappa_7_17,kappa_7_18,kappa_7_19,kappa_7_20, & 
+                           kappa_7_21,kappa_7_22,kappa_7_23,kappa_7_24,kappa_7_25,kappa_7_26,kappa_7_27,kappa_7_28,kappa_7_29,kappa_7_30, kappa_7_31, &
+                           kappa_8_1,kappa_8_2,kappa_8_3,kappa_8_4,kappa_8_5,kappa_8_6,kappa_8_7,kappa_8_8,kappa_8_9,kappa_8_10, &
+                           kappa_8_11,kappa_8_12,kappa_8_13,kappa_8_14,kappa_8_15,kappa_8_16,kappa_8_17,kappa_8_18,kappa_8_19,kappa_8_20, & 
+                           kappa_8_21,kappa_8_22,kappa_8_23,kappa_8_24,kappa_8_25,kappa_8_26,kappa_8_27,kappa_8_28,kappa_8_29,kappa_8_30, kappa_8_31, & 
+
+                           tau_1_1,tau_1_2,tau_1_3,tau_1_4,tau_1_5,tau_1_6,tau_1_7,tau_1_8,tau_1_9,tau_1_10, &
+                           tau_1_11,tau_1_12,tau_1_13,tau_1_14,tau_1_15,tau_1_16,tau_1_17,tau_1_18,tau_1_19,tau_1_20, & 
+                           tau_1_21,tau_1_22,tau_1_23,tau_1_24,tau_1_25,tau_1_26,tau_1_27,tau_1_28,tau_1_29,tau_1_30, tau_1_31, &
+                           tau_2_1,tau_2_2,tau_2_3,tau_2_4,tau_2_5,tau_2_6,tau_2_7,tau_2_8,tau_2_9,tau_2_10, &
+                           tau_2_11,tau_2_12,tau_2_13,tau_2_14,tau_2_15,tau_2_16,tau_2_17,tau_2_18,tau_2_19,tau_2_20, & 
+                           tau_2_21,tau_2_22,tau_2_23,tau_2_24,tau_2_25,tau_2_26,tau_2_27,tau_2_28,tau_2_29,tau_2_30, tau_2_31, &
+                           tau_3_1,tau_3_2,tau_3_3,tau_3_4,tau_3_5,tau_3_6,tau_3_7,tau_3_8,tau_3_9,tau_3_10, &
+                           tau_3_11,tau_3_12,tau_3_13,tau_3_14,tau_3_15,tau_3_16,tau_3_17,tau_3_18,tau_3_19,tau_3_20, & 
+                           tau_3_21,tau_3_22,tau_3_23,tau_3_24,tau_3_25,tau_3_26,tau_3_27,tau_3_28,tau_3_29,tau_3_30, tau_3_31, &
+                           tau_4_1,tau_4_2,tau_4_3,tau_4_4,tau_4_5,tau_4_6,tau_4_7,tau_4_8,tau_4_9,tau_4_10, &
+                           tau_4_11,tau_4_12,tau_4_13,tau_4_14,tau_4_15,tau_4_16,tau_4_17,tau_4_18,tau_4_19,tau_4_20, & 
+                           tau_4_21,tau_4_22,tau_4_23,tau_4_24,tau_4_25,tau_4_26,tau_4_27,tau_4_28,tau_4_29,tau_4_30, tau_4_31, &
+                           tau_5_1,tau_5_2,tau_5_3,tau_5_4,tau_5_5,tau_5_6,tau_5_7,tau_5_8,tau_5_9,tau_5_10, &
+                           tau_5_11,tau_5_12,tau_5_13,tau_5_14,tau_5_15,tau_5_16,tau_5_17,tau_5_18,tau_5_19,tau_5_20, & 
+                           tau_5_21,tau_5_22,tau_5_23,tau_5_24,tau_5_25,tau_5_26,tau_5_27,tau_5_28,tau_5_29,tau_5_30, tau_5_31, &
+                           tau_6_1,tau_6_2,tau_6_3,tau_6_4,tau_6_5,tau_6_6,tau_6_7,tau_6_8,tau_6_9,tau_6_10, &
+                           tau_6_11,tau_6_12,tau_6_13,tau_6_14,tau_6_15,tau_6_16,tau_6_17,tau_6_18,tau_6_19,tau_6_20, & 
+                           tau_6_21,tau_6_22,tau_6_23,tau_6_24,tau_6_25,tau_6_26,tau_6_27,tau_6_28,tau_6_29,tau_6_30, tau_6_31, &
+                           tau_7_1,tau_7_2,tau_7_3,tau_7_4,tau_7_5,tau_7_6,tau_7_7,tau_7_8,tau_7_9,tau_7_10, &
+                           tau_7_11,tau_7_12,tau_7_13,tau_7_14,tau_7_15,tau_7_16,tau_7_17,tau_7_18,tau_7_19,tau_7_20, & 
+                           tau_7_21,tau_7_22,tau_7_23,tau_7_24,tau_7_25,tau_7_26,tau_7_27,tau_7_28,tau_7_29,tau_7_30, tau_7_31, &
+                           tau_8_1,tau_8_2,tau_8_3,tau_8_4,tau_8_5,tau_8_6,tau_8_7,tau_8_8,tau_8_9,tau_8_10, &
+                           tau_8_11,tau_8_12,tau_8_13,tau_8_14,tau_8_15,tau_8_16,tau_8_17,tau_8_18,tau_8_19,tau_8_20, & 
+                           tau_8_21,tau_8_22,tau_8_23,tau_8_24,tau_8_25,tau_8_26,tau_8_27,tau_8_28,tau_8_29,tau_8_30, tau_8_31 
+
+    ! Initialize our variables to bad values, so that if the namelist read fails, we come to a screeching halt as soon as we try to use anything.
+    ext_mie_bd_TABLE  = -1.E36
+    w_mie_bd_TABLE    = -1.E36
+    g1_mie_bd_TABLE   = -1.E36
+    g2_mie_bd_TABLE   = -1.E36
+    g3_mie_bd_TABLE   = -1.E36
+    g4_mie_bd_TABLE   = -1.E36
+
+    ext_mie_lap_bd_TABLE  = -1.E36
+    w_mie_lap_bd_TABLE    = -1.E36
+    g_mie_lap_bd_TABLE    = -1.E36
+
+    T_TABLE           = -1.E36
+    sno_dns_TABLE     = -1.E36
+    dTdz_TABLE        = -1.E36
+
+    drdt0_TABLE       = -1.E36
+    kappa_TABLE       = -1.E36
+    tau_TABLE         = -1.E36
+
+    inquire( file='ESM_SNICAR.TBL', exist=file_named ) 
+    if ( file_named ) then
+      open(15, file="ESM_SNICAR.TBL", status='old', form='formatted', action='read', iostat=ierr)
+    else
+      open(15, status='old', form='formatted', action='read', iostat=ierr)
+    end if
+
+    if (ierr /= 0) then
+       write(*,'("WARNING: Cannot find file ESM_SNICAR.TBL")')
+       call wrf_error_fatal("STOP in Noah-MP read_esm_snicar_parameters")
+    endif
+
+    read(15,noahmp_esm_snicar_parameters)
+
+    read(15,noahmp_snow_aging_parameters)
+
+    close(15)
+
+    ext_mie_bd_TABLE(:,1)=ext_mie_bd1
+    ext_mie_bd_TABLE(:,2)=ext_mie_bd2
+    ext_mie_bd_TABLE(:,3)=ext_mie_bd3
+    ext_mie_bd_TABLE(:,4)=ext_mie_bd4
+    ext_mie_bd_TABLE(:,5)=ext_mie_bd5
+    w_mie_bd_TABLE  (:,1)=w_mie_bd1
+    w_mie_bd_TABLE  (:,2)=w_mie_bd2
+    w_mie_bd_TABLE  (:,3)=w_mie_bd3
+    w_mie_bd_TABLE  (:,4)=w_mie_bd4
+    w_mie_bd_TABLE  (:,5)=w_mie_bd5
+    g1_mie_bd_TABLE (:,1)=g1_mie_bd1
+    g1_mie_bd_TABLE (:,2)=g1_mie_bd2
+    g1_mie_bd_TABLE (:,3)=g1_mie_bd3
+    g1_mie_bd_TABLE (:,4)=g1_mie_bd4
+    g1_mie_bd_TABLE (:,5)=g1_mie_bd5
+    g2_mie_bd_TABLE (:,1)=g2_mie_bd1
+    g2_mie_bd_TABLE (:,2)=g2_mie_bd2
+    g2_mie_bd_TABLE (:,3)=g2_mie_bd3
+    g2_mie_bd_TABLE (:,4)=g2_mie_bd4
+    g2_mie_bd_TABLE (:,5)=g2_mie_bd5
+    g3_mie_bd_TABLE (:,1)=g3_mie_bd1
+    g3_mie_bd_TABLE (:,2)=g3_mie_bd2
+    g3_mie_bd_TABLE (:,3)=g3_mie_bd3
+    g3_mie_bd_TABLE (:,4)=g3_mie_bd4
+    g3_mie_bd_TABLE (:,5)=g3_mie_bd5
+    g4_mie_bd_TABLE (:,1)=g4_mie_bd1
+    g4_mie_bd_TABLE (:,2)=g4_mie_bd2
+    g4_mie_bd_TABLE (:,3)=g4_mie_bd3
+    g4_mie_bd_TABLE (:,4)=g4_mie_bd4
+    g4_mie_bd_TABLE (:,5)=g4_mie_bd5
+    ext_mie_lap_bd_TABLE(:,1)=ext_mie_lap_bd1
+    ext_mie_lap_bd_TABLE(:,2)=ext_mie_lap_bd2
+    ext_mie_lap_bd_TABLE(:,3)=ext_mie_lap_bd3
+    ext_mie_lap_bd_TABLE(:,4)=ext_mie_lap_bd4
+    ext_mie_lap_bd_TABLE(:,5)=ext_mie_lap_bd5
+    w_mie_lap_bd_TABLE(:,1)=w_mie_lap_bd1
+    w_mie_lap_bd_TABLE(:,2)=w_mie_lap_bd2
+    w_mie_lap_bd_TABLE(:,3)=w_mie_lap_bd3
+    w_mie_lap_bd_TABLE(:,4)=w_mie_lap_bd4
+    w_mie_lap_bd_TABLE(:,5)=w_mie_lap_bd5
+    g_mie_lap_bd_TABLE(:,1)=g_mie_lap_bd1
+    g_mie_lap_bd_TABLE(:,2)=g_mie_lap_bd2
+    g_mie_lap_bd_TABLE(:,3)=g_mie_lap_bd3
+    g_mie_lap_bd_TABLE(:,4)=g_mie_lap_bd4
+    g_mie_lap_bd_TABLE(:,5)=g_mie_lap_bd5
+
+    T_TABLE       = T
+    sno_dns_TABLE = sno_dns
+    dTdz_TABLE    = dTdz
+
+    drdt0_TABLE(1, 1,:)=drdt0_1_1
+    drdt0_TABLE(1, 2,:)=drdt0_1_2
+    drdt0_TABLE(1, 3,:)=drdt0_1_3
+    drdt0_TABLE(1, 4,:)=drdt0_1_4
+    drdt0_TABLE(1, 5,:)=drdt0_1_5
+    drdt0_TABLE(1, 6,:)=drdt0_1_6
+    drdt0_TABLE(1, 7,:)=drdt0_1_7
+    drdt0_TABLE(1, 8,:)=drdt0_1_8
+    drdt0_TABLE(1, 9,:)=drdt0_1_9
+    drdt0_TABLE(1,10,:)=drdt0_1_10
+    drdt0_TABLE(1,11,:)=drdt0_1_11
+    drdt0_TABLE(1,12,:)=drdt0_1_12
+    drdt0_TABLE(1,13,:)=drdt0_1_13
+    drdt0_TABLE(1,14,:)=drdt0_1_14
+    drdt0_TABLE(1,15,:)=drdt0_1_15
+    drdt0_TABLE(1,16,:)=drdt0_1_16
+    drdt0_TABLE(1,17,:)=drdt0_1_17
+    drdt0_TABLE(1,18,:)=drdt0_1_18
+    drdt0_TABLE(1,19,:)=drdt0_1_19
+    drdt0_TABLE(1,20,:)=drdt0_1_20
+    drdt0_TABLE(1,21,:)=drdt0_1_21
+    drdt0_TABLE(1,22,:)=drdt0_1_22
+    drdt0_TABLE(1,23,:)=drdt0_1_23
+    drdt0_TABLE(1,24,:)=drdt0_1_24
+    drdt0_TABLE(1,25,:)=drdt0_1_25
+    drdt0_TABLE(1,26,:)=drdt0_1_26
+    drdt0_TABLE(1,27,:)=drdt0_1_27
+    drdt0_TABLE(1,28,:)=drdt0_1_28
+    drdt0_TABLE(1,29,:)=drdt0_1_29
+    drdt0_TABLE(1,30,:)=drdt0_1_30
+    drdt0_TABLE(1,31,:)=drdt0_1_31
+
+    drdt0_TABLE(2, 1,:)=drdt0_2_1
+    drdt0_TABLE(2, 2,:)=drdt0_2_2
+    drdt0_TABLE(2, 3,:)=drdt0_2_3
+    drdt0_TABLE(2, 4,:)=drdt0_2_4
+    drdt0_TABLE(2, 5,:)=drdt0_2_5
+    drdt0_TABLE(2, 6,:)=drdt0_2_6
+    drdt0_TABLE(2, 7,:)=drdt0_2_7
+    drdt0_TABLE(2, 8,:)=drdt0_2_8
+    drdt0_TABLE(2, 9,:)=drdt0_2_9
+    drdt0_TABLE(2,10,:)=drdt0_2_10
+    drdt0_TABLE(2,11,:)=drdt0_2_11
+    drdt0_TABLE(2,12,:)=drdt0_2_12
+    drdt0_TABLE(2,13,:)=drdt0_2_13
+    drdt0_TABLE(2,14,:)=drdt0_2_14
+    drdt0_TABLE(2,15,:)=drdt0_2_15
+    drdt0_TABLE(2,16,:)=drdt0_2_16
+    drdt0_TABLE(2,17,:)=drdt0_2_17
+    drdt0_TABLE(2,18,:)=drdt0_2_18
+    drdt0_TABLE(2,19,:)=drdt0_2_19
+    drdt0_TABLE(2,20,:)=drdt0_2_20
+    drdt0_TABLE(2,21,:)=drdt0_2_21
+    drdt0_TABLE(2,22,:)=drdt0_2_22
+    drdt0_TABLE(2,23,:)=drdt0_2_23
+    drdt0_TABLE(2,24,:)=drdt0_2_24
+    drdt0_TABLE(2,25,:)=drdt0_2_25
+    drdt0_TABLE(2,26,:)=drdt0_2_26
+    drdt0_TABLE(2,27,:)=drdt0_2_27
+    drdt0_TABLE(2,28,:)=drdt0_2_28
+    drdt0_TABLE(2,29,:)=drdt0_2_29
+    drdt0_TABLE(2,30,:)=drdt0_2_30
+    drdt0_TABLE(2,31,:)=drdt0_2_31
+
+    drdt0_TABLE(3, 1,:)=drdt0_3_1
+    drdt0_TABLE(3, 2,:)=drdt0_3_2
+    drdt0_TABLE(3, 3,:)=drdt0_3_3
+    drdt0_TABLE(3, 4,:)=drdt0_3_4
+    drdt0_TABLE(3, 5,:)=drdt0_3_5
+    drdt0_TABLE(3, 6,:)=drdt0_3_6
+    drdt0_TABLE(3, 7,:)=drdt0_3_7
+    drdt0_TABLE(3, 8,:)=drdt0_3_8
+    drdt0_TABLE(3, 9,:)=drdt0_3_9
+    drdt0_TABLE(3,10,:)=drdt0_3_10
+    drdt0_TABLE(3,11,:)=drdt0_3_11
+    drdt0_TABLE(3,12,:)=drdt0_3_12
+    drdt0_TABLE(3,13,:)=drdt0_3_13
+    drdt0_TABLE(3,14,:)=drdt0_3_14
+    drdt0_TABLE(3,15,:)=drdt0_3_15
+    drdt0_TABLE(3,16,:)=drdt0_3_16
+    drdt0_TABLE(3,17,:)=drdt0_3_17
+    drdt0_TABLE(3,18,:)=drdt0_3_18
+    drdt0_TABLE(3,19,:)=drdt0_3_19
+    drdt0_TABLE(3,20,:)=drdt0_3_20
+    drdt0_TABLE(3,21,:)=drdt0_3_21
+    drdt0_TABLE(3,22,:)=drdt0_3_22
+    drdt0_TABLE(3,23,:)=drdt0_3_23
+    drdt0_TABLE(3,24,:)=drdt0_3_24
+    drdt0_TABLE(3,25,:)=drdt0_3_25
+    drdt0_TABLE(3,26,:)=drdt0_3_26
+    drdt0_TABLE(3,27,:)=drdt0_3_27
+    drdt0_TABLE(3,28,:)=drdt0_3_28
+    drdt0_TABLE(3,29,:)=drdt0_3_29
+    drdt0_TABLE(3,30,:)=drdt0_3_30
+    drdt0_TABLE(3,31,:)=drdt0_3_31
+
+    drdt0_TABLE(4, 1,:)=drdt0_4_1
+    drdt0_TABLE(4, 2,:)=drdt0_4_2
+    drdt0_TABLE(4, 3,:)=drdt0_4_3
+    drdt0_TABLE(4, 4,:)=drdt0_4_4
+    drdt0_TABLE(4, 5,:)=drdt0_4_5
+    drdt0_TABLE(4, 6,:)=drdt0_4_6
+    drdt0_TABLE(4, 7,:)=drdt0_4_7
+    drdt0_TABLE(4, 8,:)=drdt0_4_8
+    drdt0_TABLE(4, 9,:)=drdt0_4_9
+    drdt0_TABLE(4,10,:)=drdt0_4_10
+    drdt0_TABLE(4,11,:)=drdt0_4_11
+    drdt0_TABLE(4,12,:)=drdt0_4_12
+    drdt0_TABLE(4,13,:)=drdt0_4_13
+    drdt0_TABLE(4,14,:)=drdt0_4_14
+    drdt0_TABLE(4,15,:)=drdt0_4_15
+    drdt0_TABLE(4,16,:)=drdt0_4_16
+    drdt0_TABLE(4,17,:)=drdt0_4_17
+    drdt0_TABLE(4,18,:)=drdt0_4_18
+    drdt0_TABLE(4,19,:)=drdt0_4_19
+    drdt0_TABLE(4,20,:)=drdt0_4_20
+    drdt0_TABLE(4,21,:)=drdt0_4_21
+    drdt0_TABLE(4,22,:)=drdt0_4_22
+    drdt0_TABLE(4,23,:)=drdt0_4_23
+    drdt0_TABLE(4,24,:)=drdt0_4_24
+    drdt0_TABLE(4,25,:)=drdt0_4_25
+    drdt0_TABLE(4,26,:)=drdt0_4_26
+    drdt0_TABLE(4,27,:)=drdt0_4_27
+    drdt0_TABLE(4,28,:)=drdt0_4_28
+    drdt0_TABLE(4,29,:)=drdt0_4_29
+    drdt0_TABLE(4,30,:)=drdt0_4_30
+    drdt0_TABLE(4,31,:)=drdt0_4_31
+
+    drdt0_TABLE(5, 1,:)=drdt0_5_1
+    drdt0_TABLE(5, 2,:)=drdt0_5_2
+    drdt0_TABLE(5, 3,:)=drdt0_5_3
+    drdt0_TABLE(5, 4,:)=drdt0_5_4
+    drdt0_TABLE(5, 5,:)=drdt0_5_5
+    drdt0_TABLE(5, 6,:)=drdt0_5_6
+    drdt0_TABLE(5, 7,:)=drdt0_5_7
+    drdt0_TABLE(5, 8,:)=drdt0_5_8
+    drdt0_TABLE(5, 9,:)=drdt0_5_9
+    drdt0_TABLE(5,10,:)=drdt0_5_10
+    drdt0_TABLE(5,11,:)=drdt0_5_11
+    drdt0_TABLE(5,12,:)=drdt0_5_12
+    drdt0_TABLE(5,13,:)=drdt0_5_13
+    drdt0_TABLE(5,14,:)=drdt0_5_14
+    drdt0_TABLE(5,15,:)=drdt0_5_15
+    drdt0_TABLE(5,16,:)=drdt0_5_16
+    drdt0_TABLE(5,17,:)=drdt0_5_17
+    drdt0_TABLE(5,18,:)=drdt0_5_18
+    drdt0_TABLE(5,19,:)=drdt0_5_19
+    drdt0_TABLE(5,20,:)=drdt0_5_20
+    drdt0_TABLE(5,21,:)=drdt0_5_21
+    drdt0_TABLE(5,22,:)=drdt0_5_22
+    drdt0_TABLE(5,23,:)=drdt0_5_23
+    drdt0_TABLE(5,24,:)=drdt0_5_24
+    drdt0_TABLE(5,25,:)=drdt0_5_25
+    drdt0_TABLE(5,26,:)=drdt0_5_26
+    drdt0_TABLE(5,27,:)=drdt0_5_27
+    drdt0_TABLE(5,28,:)=drdt0_5_28
+    drdt0_TABLE(5,29,:)=drdt0_5_29
+    drdt0_TABLE(5,30,:)=drdt0_5_30
+    drdt0_TABLE(5,31,:)=drdt0_5_31
+
+    drdt0_TABLE(6, 1,:)=drdt0_6_1
+    drdt0_TABLE(6, 2,:)=drdt0_6_2
+    drdt0_TABLE(6, 3,:)=drdt0_6_3
+    drdt0_TABLE(6, 4,:)=drdt0_6_4
+    drdt0_TABLE(6, 5,:)=drdt0_6_5
+    drdt0_TABLE(6, 6,:)=drdt0_6_6
+    drdt0_TABLE(6, 7,:)=drdt0_6_7
+    drdt0_TABLE(6, 8,:)=drdt0_6_8
+    drdt0_TABLE(6, 9,:)=drdt0_6_9
+    drdt0_TABLE(6,10,:)=drdt0_6_10
+    drdt0_TABLE(6,11,:)=drdt0_6_11
+    drdt0_TABLE(6,12,:)=drdt0_6_12
+    drdt0_TABLE(6,13,:)=drdt0_6_13
+    drdt0_TABLE(6,14,:)=drdt0_6_14
+    drdt0_TABLE(6,15,:)=drdt0_6_15
+    drdt0_TABLE(6,16,:)=drdt0_6_16
+    drdt0_TABLE(6,17,:)=drdt0_6_17
+    drdt0_TABLE(6,18,:)=drdt0_6_18
+    drdt0_TABLE(6,19,:)=drdt0_6_19
+    drdt0_TABLE(6,20,:)=drdt0_6_20
+    drdt0_TABLE(6,21,:)=drdt0_6_21
+    drdt0_TABLE(6,22,:)=drdt0_6_22
+    drdt0_TABLE(6,23,:)=drdt0_6_23
+    drdt0_TABLE(6,24,:)=drdt0_6_24
+    drdt0_TABLE(6,25,:)=drdt0_6_25
+    drdt0_TABLE(6,26,:)=drdt0_6_26
+    drdt0_TABLE(6,27,:)=drdt0_6_27
+    drdt0_TABLE(6,28,:)=drdt0_6_28
+    drdt0_TABLE(6,29,:)=drdt0_6_29
+    drdt0_TABLE(6,30,:)=drdt0_6_30
+    drdt0_TABLE(6,31,:)=drdt0_6_31
+
+    drdt0_TABLE(7, 1,:)=drdt0_7_1
+    drdt0_TABLE(7, 2,:)=drdt0_7_2
+    drdt0_TABLE(7, 3,:)=drdt0_7_3
+    drdt0_TABLE(7, 4,:)=drdt0_7_4
+    drdt0_TABLE(7, 5,:)=drdt0_7_5
+    drdt0_TABLE(7, 6,:)=drdt0_7_6
+    drdt0_TABLE(7, 7,:)=drdt0_7_7
+    drdt0_TABLE(7, 8,:)=drdt0_7_8
+    drdt0_TABLE(7, 9,:)=drdt0_7_9
+    drdt0_TABLE(7,10,:)=drdt0_7_10
+    drdt0_TABLE(7,11,:)=drdt0_7_11
+    drdt0_TABLE(7,12,:)=drdt0_7_12
+    drdt0_TABLE(7,13,:)=drdt0_7_13
+    drdt0_TABLE(7,14,:)=drdt0_7_14
+    drdt0_TABLE(7,15,:)=drdt0_7_15
+    drdt0_TABLE(7,16,:)=drdt0_7_16
+    drdt0_TABLE(7,17,:)=drdt0_7_17
+    drdt0_TABLE(7,18,:)=drdt0_7_18
+    drdt0_TABLE(7,19,:)=drdt0_7_19
+    drdt0_TABLE(7,20,:)=drdt0_7_20
+    drdt0_TABLE(7,21,:)=drdt0_7_21
+    drdt0_TABLE(7,22,:)=drdt0_7_22
+    drdt0_TABLE(7,23,:)=drdt0_7_23
+    drdt0_TABLE(7,24,:)=drdt0_7_24
+    drdt0_TABLE(7,25,:)=drdt0_7_25
+    drdt0_TABLE(7,26,:)=drdt0_7_26
+    drdt0_TABLE(7,27,:)=drdt0_7_27
+    drdt0_TABLE(7,28,:)=drdt0_7_28
+    drdt0_TABLE(7,29,:)=drdt0_7_29
+    drdt0_TABLE(7,30,:)=drdt0_7_30
+    drdt0_TABLE(7,31,:)=drdt0_7_31
+
+    drdt0_TABLE(8, 1,:)=drdt0_8_1
+    drdt0_TABLE(8, 2,:)=drdt0_8_2
+    drdt0_TABLE(8, 3,:)=drdt0_8_3
+    drdt0_TABLE(8, 4,:)=drdt0_8_4
+    drdt0_TABLE(8, 5,:)=drdt0_8_5
+    drdt0_TABLE(8, 6,:)=drdt0_8_6
+    drdt0_TABLE(8, 7,:)=drdt0_8_7
+    drdt0_TABLE(8, 8,:)=drdt0_8_8
+    drdt0_TABLE(8, 9,:)=drdt0_8_9
+    drdt0_TABLE(8,10,:)=drdt0_8_10
+    drdt0_TABLE(8,11,:)=drdt0_8_11
+    drdt0_TABLE(8,12,:)=drdt0_8_12
+    drdt0_TABLE(8,13,:)=drdt0_8_13
+    drdt0_TABLE(8,14,:)=drdt0_8_14
+    drdt0_TABLE(8,15,:)=drdt0_8_15
+    drdt0_TABLE(8,16,:)=drdt0_8_16
+    drdt0_TABLE(8,17,:)=drdt0_8_17
+    drdt0_TABLE(8,18,:)=drdt0_8_18
+    drdt0_TABLE(8,19,:)=drdt0_8_19
+    drdt0_TABLE(8,20,:)=drdt0_8_20
+    drdt0_TABLE(8,21,:)=drdt0_8_21
+    drdt0_TABLE(8,22,:)=drdt0_8_22
+    drdt0_TABLE(8,23,:)=drdt0_8_23
+    drdt0_TABLE(8,24,:)=drdt0_8_24
+    drdt0_TABLE(8,25,:)=drdt0_8_25
+    drdt0_TABLE(8,26,:)=drdt0_8_26
+    drdt0_TABLE(8,27,:)=drdt0_8_27
+    drdt0_TABLE(8,28,:)=drdt0_8_28
+    drdt0_TABLE(8,29,:)=drdt0_8_29
+    drdt0_TABLE(8,30,:)=drdt0_8_30
+    drdt0_TABLE(8,31,:)=drdt0_8_31
+
+    kappa_TABLE(1, 1,:)=kappa_1_1
+    kappa_TABLE(1, 2,:)=kappa_1_2
+    kappa_TABLE(1, 3,:)=kappa_1_3
+    kappa_TABLE(1, 4,:)=kappa_1_4
+    kappa_TABLE(1, 5,:)=kappa_1_5
+    kappa_TABLE(1, 6,:)=kappa_1_6
+    kappa_TABLE(1, 7,:)=kappa_1_7
+    kappa_TABLE(1, 8,:)=kappa_1_8
+    kappa_TABLE(1, 9,:)=kappa_1_9
+    kappa_TABLE(1,10,:)=kappa_1_10
+    kappa_TABLE(1,11,:)=kappa_1_11
+    kappa_TABLE(1,12,:)=kappa_1_12
+    kappa_TABLE(1,13,:)=kappa_1_13
+    kappa_TABLE(1,14,:)=kappa_1_14
+    kappa_TABLE(1,15,:)=kappa_1_15
+    kappa_TABLE(1,16,:)=kappa_1_16
+    kappa_TABLE(1,17,:)=kappa_1_17
+    kappa_TABLE(1,18,:)=kappa_1_18
+    kappa_TABLE(1,19,:)=kappa_1_19
+    kappa_TABLE(1,20,:)=kappa_1_20
+    kappa_TABLE(1,21,:)=kappa_1_21
+    kappa_TABLE(1,22,:)=kappa_1_22
+    kappa_TABLE(1,23,:)=kappa_1_23
+    kappa_TABLE(1,24,:)=kappa_1_24
+    kappa_TABLE(1,25,:)=kappa_1_25
+    kappa_TABLE(1,26,:)=kappa_1_26
+    kappa_TABLE(1,27,:)=kappa_1_27
+    kappa_TABLE(1,28,:)=kappa_1_28
+    kappa_TABLE(1,29,:)=kappa_1_29
+    kappa_TABLE(1,30,:)=kappa_1_30
+    kappa_TABLE(1,31,:)=kappa_1_31
+
+    kappa_TABLE(2, 1,:)=kappa_2_1
+    kappa_TABLE(2, 2,:)=kappa_2_2
+    kappa_TABLE(2, 3,:)=kappa_2_3
+    kappa_TABLE(2, 4,:)=kappa_2_4
+    kappa_TABLE(2, 5,:)=kappa_2_5
+    kappa_TABLE(2, 6,:)=kappa_2_6
+    kappa_TABLE(2, 7,:)=kappa_2_7
+    kappa_TABLE(2, 8,:)=kappa_2_8
+    kappa_TABLE(2, 9,:)=kappa_2_9
+    kappa_TABLE(2,10,:)=kappa_2_10
+    kappa_TABLE(2,11,:)=kappa_2_11
+    kappa_TABLE(2,12,:)=kappa_2_12
+    kappa_TABLE(2,13,:)=kappa_2_13
+    kappa_TABLE(2,14,:)=kappa_2_14
+    kappa_TABLE(2,15,:)=kappa_2_15
+    kappa_TABLE(2,16,:)=kappa_2_16
+    kappa_TABLE(2,17,:)=kappa_2_17
+    kappa_TABLE(2,18,:)=kappa_2_18
+    kappa_TABLE(2,19,:)=kappa_2_19
+    kappa_TABLE(2,20,:)=kappa_2_20
+    kappa_TABLE(2,21,:)=kappa_2_21
+    kappa_TABLE(2,22,:)=kappa_2_22
+    kappa_TABLE(2,23,:)=kappa_2_23
+    kappa_TABLE(2,24,:)=kappa_2_24
+    kappa_TABLE(2,25,:)=kappa_2_25
+    kappa_TABLE(2,26,:)=kappa_2_26
+    kappa_TABLE(2,27,:)=kappa_2_27
+    kappa_TABLE(2,28,:)=kappa_2_28
+    kappa_TABLE(2,29,:)=kappa_2_29
+    kappa_TABLE(2,30,:)=kappa_2_30
+    kappa_TABLE(2,31,:)=kappa_2_31
+
+    kappa_TABLE(3, 1,:)=kappa_3_1
+    kappa_TABLE(3, 2,:)=kappa_3_2
+    kappa_TABLE(3, 3,:)=kappa_3_3
+    kappa_TABLE(3, 4,:)=kappa_3_4
+    kappa_TABLE(3, 5,:)=kappa_3_5
+    kappa_TABLE(3, 6,:)=kappa_3_6
+    kappa_TABLE(3, 7,:)=kappa_3_7
+    kappa_TABLE(3, 8,:)=kappa_3_8
+    kappa_TABLE(3, 9,:)=kappa_3_9
+    kappa_TABLE(3,10,:)=kappa_3_10
+    kappa_TABLE(3,11,:)=kappa_3_11
+    kappa_TABLE(3,12,:)=kappa_3_12
+    kappa_TABLE(3,13,:)=kappa_3_13
+    kappa_TABLE(3,14,:)=kappa_3_14
+    kappa_TABLE(3,15,:)=kappa_3_15
+    kappa_TABLE(3,16,:)=kappa_3_16
+    kappa_TABLE(3,17,:)=kappa_3_17
+    kappa_TABLE(3,18,:)=kappa_3_18
+    kappa_TABLE(3,19,:)=kappa_3_19
+    kappa_TABLE(3,20,:)=kappa_3_20
+    kappa_TABLE(3,21,:)=kappa_3_21
+    kappa_TABLE(3,22,:)=kappa_3_22
+    kappa_TABLE(3,23,:)=kappa_3_23
+    kappa_TABLE(3,24,:)=kappa_3_24
+    kappa_TABLE(3,25,:)=kappa_3_25
+    kappa_TABLE(3,26,:)=kappa_3_26
+    kappa_TABLE(3,27,:)=kappa_3_27
+    kappa_TABLE(3,28,:)=kappa_3_28
+    kappa_TABLE(3,29,:)=kappa_3_29
+    kappa_TABLE(3,30,:)=kappa_3_30
+    kappa_TABLE(3,31,:)=kappa_3_31
+
+    kappa_TABLE(4, 1,:)=kappa_4_1
+    kappa_TABLE(4, 2,:)=kappa_4_2
+    kappa_TABLE(4, 3,:)=kappa_4_3
+    kappa_TABLE(4, 4,:)=kappa_4_4
+    kappa_TABLE(4, 5,:)=kappa_4_5
+    kappa_TABLE(4, 6,:)=kappa_4_6
+    kappa_TABLE(4, 7,:)=kappa_4_7
+    kappa_TABLE(4, 8,:)=kappa_4_8
+    kappa_TABLE(4, 9,:)=kappa_4_9
+    kappa_TABLE(4,10,:)=kappa_4_10
+    kappa_TABLE(4,11,:)=kappa_4_11
+    kappa_TABLE(4,12,:)=kappa_4_12
+    kappa_TABLE(4,13,:)=kappa_4_13
+    kappa_TABLE(4,14,:)=kappa_4_14
+    kappa_TABLE(4,15,:)=kappa_4_15
+    kappa_TABLE(4,16,:)=kappa_4_16
+    kappa_TABLE(4,17,:)=kappa_4_17
+    kappa_TABLE(4,18,:)=kappa_4_18
+    kappa_TABLE(4,19,:)=kappa_4_19
+    kappa_TABLE(4,20,:)=kappa_4_20
+    kappa_TABLE(4,21,:)=kappa_4_21
+    kappa_TABLE(4,22,:)=kappa_4_22
+    kappa_TABLE(4,23,:)=kappa_4_23
+    kappa_TABLE(4,24,:)=kappa_4_24
+    kappa_TABLE(4,25,:)=kappa_4_25
+    kappa_TABLE(4,26,:)=kappa_4_26
+    kappa_TABLE(4,27,:)=kappa_4_27
+    kappa_TABLE(4,28,:)=kappa_4_28
+    kappa_TABLE(4,29,:)=kappa_4_29
+    kappa_TABLE(4,30,:)=kappa_4_30
+    kappa_TABLE(4,31,:)=kappa_4_31
+
+    kappa_TABLE(5, 1,:)=kappa_5_1
+    kappa_TABLE(5, 2,:)=kappa_5_2
+    kappa_TABLE(5, 3,:)=kappa_5_3
+    kappa_TABLE(5, 4,:)=kappa_5_4
+    kappa_TABLE(5, 5,:)=kappa_5_5
+    kappa_TABLE(5, 6,:)=kappa_5_6
+    kappa_TABLE(5, 7,:)=kappa_5_7
+    kappa_TABLE(5, 8,:)=kappa_5_8
+    kappa_TABLE(5, 9,:)=kappa_5_9
+    kappa_TABLE(5,10,:)=kappa_5_10
+    kappa_TABLE(5,11,:)=kappa_5_11
+    kappa_TABLE(5,12,:)=kappa_5_12
+    kappa_TABLE(5,13,:)=kappa_5_13
+    kappa_TABLE(5,14,:)=kappa_5_14
+    kappa_TABLE(5,15,:)=kappa_5_15
+    kappa_TABLE(5,16,:)=kappa_5_16
+    kappa_TABLE(5,17,:)=kappa_5_17
+    kappa_TABLE(5,18,:)=kappa_5_18
+    kappa_TABLE(5,19,:)=kappa_5_19
+    kappa_TABLE(5,20,:)=kappa_5_20
+    kappa_TABLE(5,21,:)=kappa_5_21
+    kappa_TABLE(5,22,:)=kappa_5_22
+    kappa_TABLE(5,23,:)=kappa_5_23
+    kappa_TABLE(5,24,:)=kappa_5_24
+    kappa_TABLE(5,25,:)=kappa_5_25
+    kappa_TABLE(5,26,:)=kappa_5_26
+    kappa_TABLE(5,27,:)=kappa_5_27
+    kappa_TABLE(5,28,:)=kappa_5_28
+    kappa_TABLE(5,29,:)=kappa_5_29
+    kappa_TABLE(5,30,:)=kappa_5_30
+    kappa_TABLE(5,31,:)=kappa_5_31
+
+    kappa_TABLE(6, 1,:)=kappa_6_1
+    kappa_TABLE(6, 2,:)=kappa_6_2
+    kappa_TABLE(6, 3,:)=kappa_6_3
+    kappa_TABLE(6, 4,:)=kappa_6_4
+    kappa_TABLE(6, 5,:)=kappa_6_5
+    kappa_TABLE(6, 6,:)=kappa_6_6
+    kappa_TABLE(6, 7,:)=kappa_6_7
+    kappa_TABLE(6, 8,:)=kappa_6_8
+    kappa_TABLE(6, 9,:)=kappa_6_9
+    kappa_TABLE(6,10,:)=kappa_6_10
+    kappa_TABLE(6,11,:)=kappa_6_11
+    kappa_TABLE(6,12,:)=kappa_6_12
+    kappa_TABLE(6,13,:)=kappa_6_13
+    kappa_TABLE(6,14,:)=kappa_6_14
+    kappa_TABLE(6,15,:)=kappa_6_15
+    kappa_TABLE(6,16,:)=kappa_6_16
+    kappa_TABLE(6,17,:)=kappa_6_17
+    kappa_TABLE(6,18,:)=kappa_6_18
+    kappa_TABLE(6,19,:)=kappa_6_19
+    kappa_TABLE(6,20,:)=kappa_6_20
+    kappa_TABLE(6,21,:)=kappa_6_21
+    kappa_TABLE(6,22,:)=kappa_6_22
+    kappa_TABLE(6,23,:)=kappa_6_23
+    kappa_TABLE(6,24,:)=kappa_6_24
+    kappa_TABLE(6,25,:)=kappa_6_25
+    kappa_TABLE(6,26,:)=kappa_6_26
+    kappa_TABLE(6,27,:)=kappa_6_27
+    kappa_TABLE(6,28,:)=kappa_6_28
+    kappa_TABLE(6,29,:)=kappa_6_29
+    kappa_TABLE(6,30,:)=kappa_6_30
+    kappa_TABLE(6,31,:)=kappa_6_31
+
+    kappa_TABLE(7, 1,:)=kappa_7_1
+    kappa_TABLE(7, 2,:)=kappa_7_2
+    kappa_TABLE(7, 3,:)=kappa_7_3
+    kappa_TABLE(7, 4,:)=kappa_7_4
+    kappa_TABLE(7, 5,:)=kappa_7_5
+    kappa_TABLE(7, 6,:)=kappa_7_6
+    kappa_TABLE(7, 7,:)=kappa_7_7
+    kappa_TABLE(7, 8,:)=kappa_7_8
+    kappa_TABLE(7, 9,:)=kappa_7_9
+    kappa_TABLE(7,10,:)=kappa_7_10
+    kappa_TABLE(7,11,:)=kappa_7_11
+    kappa_TABLE(7,12,:)=kappa_7_12
+    kappa_TABLE(7,13,:)=kappa_7_13
+    kappa_TABLE(7,14,:)=kappa_7_14
+    kappa_TABLE(7,15,:)=kappa_7_15
+    kappa_TABLE(7,16,:)=kappa_7_16
+    kappa_TABLE(7,17,:)=kappa_7_17
+    kappa_TABLE(7,18,:)=kappa_7_18
+    kappa_TABLE(7,19,:)=kappa_7_19
+    kappa_TABLE(7,20,:)=kappa_7_20
+    kappa_TABLE(7,21,:)=kappa_7_21
+    kappa_TABLE(7,22,:)=kappa_7_22
+    kappa_TABLE(7,23,:)=kappa_7_23
+    kappa_TABLE(7,24,:)=kappa_7_24
+    kappa_TABLE(7,25,:)=kappa_7_25
+    kappa_TABLE(7,26,:)=kappa_7_26
+    kappa_TABLE(7,27,:)=kappa_7_27
+    kappa_TABLE(7,28,:)=kappa_7_28
+    kappa_TABLE(7,29,:)=kappa_7_29
+    kappa_TABLE(7,30,:)=kappa_7_30
+    kappa_TABLE(7,31,:)=kappa_7_31
+
+    kappa_TABLE(8, 1,:)=kappa_8_1
+    kappa_TABLE(8, 2,:)=kappa_8_2
+    kappa_TABLE(8, 3,:)=kappa_8_3
+    kappa_TABLE(8, 4,:)=kappa_8_4
+    kappa_TABLE(8, 5,:)=kappa_8_5
+    kappa_TABLE(8, 6,:)=kappa_8_6
+    kappa_TABLE(8, 7,:)=kappa_8_7
+    kappa_TABLE(8, 8,:)=kappa_8_8
+    kappa_TABLE(8, 9,:)=kappa_8_9
+    kappa_TABLE(8,10,:)=kappa_8_10
+    kappa_TABLE(8,11,:)=kappa_8_11
+    kappa_TABLE(8,12,:)=kappa_8_12
+    kappa_TABLE(8,13,:)=kappa_8_13
+    kappa_TABLE(8,14,:)=kappa_8_14
+    kappa_TABLE(8,15,:)=kappa_8_15
+    kappa_TABLE(8,16,:)=kappa_8_16
+    kappa_TABLE(8,17,:)=kappa_8_17
+    kappa_TABLE(8,18,:)=kappa_8_18
+    kappa_TABLE(8,19,:)=kappa_8_19
+    kappa_TABLE(8,20,:)=kappa_8_20
+    kappa_TABLE(8,21,:)=kappa_8_21
+    kappa_TABLE(8,22,:)=kappa_8_22
+    kappa_TABLE(8,23,:)=kappa_8_23
+    kappa_TABLE(8,24,:)=kappa_8_24
+    kappa_TABLE(8,25,:)=kappa_8_25
+    kappa_TABLE(8,26,:)=kappa_8_26
+    kappa_TABLE(8,27,:)=kappa_8_27
+    kappa_TABLE(8,28,:)=kappa_8_28
+    kappa_TABLE(8,29,:)=kappa_8_29
+    kappa_TABLE(8,30,:)=kappa_8_30
+    kappa_TABLE(8,31,:)=kappa_8_31
+
+    tau_TABLE(1, 1,:)=tau_1_1
+    tau_TABLE(1, 2,:)=tau_1_2
+    tau_TABLE(1, 3,:)=tau_1_3
+    tau_TABLE(1, 4,:)=tau_1_4
+    tau_TABLE(1, 5,:)=tau_1_5
+    tau_TABLE(1, 6,:)=tau_1_6
+    tau_TABLE(1, 7,:)=tau_1_7
+    tau_TABLE(1, 8,:)=tau_1_8
+    tau_TABLE(1, 9,:)=tau_1_9
+    tau_TABLE(1,10,:)=tau_1_10
+    tau_TABLE(1,11,:)=tau_1_11
+    tau_TABLE(1,12,:)=tau_1_12
+    tau_TABLE(1,13,:)=tau_1_13
+    tau_TABLE(1,14,:)=tau_1_14
+    tau_TABLE(1,15,:)=tau_1_15
+    tau_TABLE(1,16,:)=tau_1_16
+    tau_TABLE(1,17,:)=tau_1_17
+    tau_TABLE(1,18,:)=tau_1_18
+    tau_TABLE(1,19,:)=tau_1_19
+    tau_TABLE(1,20,:)=tau_1_20
+    tau_TABLE(1,21,:)=tau_1_21
+    tau_TABLE(1,22,:)=tau_1_22
+    tau_TABLE(1,23,:)=tau_1_23
+    tau_TABLE(1,24,:)=tau_1_24
+    tau_TABLE(1,25,:)=tau_1_25
+    tau_TABLE(1,26,:)=tau_1_26
+    tau_TABLE(1,27,:)=tau_1_27
+    tau_TABLE(1,28,:)=tau_1_28
+    tau_TABLE(1,29,:)=tau_1_29
+    tau_TABLE(1,30,:)=tau_1_30
+    tau_TABLE(1,31,:)=tau_1_31
+
+    tau_TABLE(2, 1,:)=tau_2_1
+    tau_TABLE(2, 2,:)=tau_2_2
+    tau_TABLE(2, 3,:)=tau_2_3
+    tau_TABLE(2, 4,:)=tau_2_4
+    tau_TABLE(2, 5,:)=tau_2_5
+    tau_TABLE(2, 6,:)=tau_2_6
+    tau_TABLE(2, 7,:)=tau_2_7
+    tau_TABLE(2, 8,:)=tau_2_8
+    tau_TABLE(2, 9,:)=tau_2_9
+    tau_TABLE(2,10,:)=tau_2_10
+    tau_TABLE(2,11,:)=tau_2_11
+    tau_TABLE(2,12,:)=tau_2_12
+    tau_TABLE(2,13,:)=tau_2_13
+    tau_TABLE(2,14,:)=tau_2_14
+    tau_TABLE(2,15,:)=tau_2_15
+    tau_TABLE(2,16,:)=tau_2_16
+    tau_TABLE(2,17,:)=tau_2_17
+    tau_TABLE(2,18,:)=tau_2_18
+    tau_TABLE(2,19,:)=tau_2_19
+    tau_TABLE(2,20,:)=tau_2_20
+    tau_TABLE(2,21,:)=tau_2_21
+    tau_TABLE(2,22,:)=tau_2_22
+    tau_TABLE(2,23,:)=tau_2_23
+    tau_TABLE(2,24,:)=tau_2_24
+    tau_TABLE(2,25,:)=tau_2_25
+    tau_TABLE(2,26,:)=tau_2_26
+    tau_TABLE(2,27,:)=tau_2_27
+    tau_TABLE(2,28,:)=tau_2_28
+    tau_TABLE(2,29,:)=tau_2_29
+    tau_TABLE(2,30,:)=tau_2_30
+    tau_TABLE(2,31,:)=tau_2_31
+
+    tau_TABLE(3, 1,:)=tau_3_1
+    tau_TABLE(3, 2,:)=tau_3_2
+    tau_TABLE(3, 3,:)=tau_3_3
+    tau_TABLE(3, 4,:)=tau_3_4
+    tau_TABLE(3, 5,:)=tau_3_5
+    tau_TABLE(3, 6,:)=tau_3_6
+    tau_TABLE(3, 7,:)=tau_3_7
+    tau_TABLE(3, 8,:)=tau_3_8
+    tau_TABLE(3, 9,:)=tau_3_9
+    tau_TABLE(3,10,:)=tau_3_10
+    tau_TABLE(3,11,:)=tau_3_11
+    tau_TABLE(3,12,:)=tau_3_12
+    tau_TABLE(3,13,:)=tau_3_13
+    tau_TABLE(3,14,:)=tau_3_14
+    tau_TABLE(3,15,:)=tau_3_15
+    tau_TABLE(3,16,:)=tau_3_16
+    tau_TABLE(3,17,:)=tau_3_17
+    tau_TABLE(3,18,:)=tau_3_18
+    tau_TABLE(3,19,:)=tau_3_19
+    tau_TABLE(3,20,:)=tau_3_20
+    tau_TABLE(3,21,:)=tau_3_21
+    tau_TABLE(3,22,:)=tau_3_22
+    tau_TABLE(3,23,:)=tau_3_23
+    tau_TABLE(3,24,:)=tau_3_24
+    tau_TABLE(3,25,:)=tau_3_25
+    tau_TABLE(3,26,:)=tau_3_26
+    tau_TABLE(3,27,:)=tau_3_27
+    tau_TABLE(3,28,:)=tau_3_28
+    tau_TABLE(3,29,:)=tau_3_29
+    tau_TABLE(3,30,:)=tau_3_30
+    tau_TABLE(3,31,:)=tau_3_31
+
+    tau_TABLE(4, 1,:)=tau_4_1
+    tau_TABLE(4, 2,:)=tau_4_2
+    tau_TABLE(4, 3,:)=tau_4_3
+    tau_TABLE(4, 4,:)=tau_4_4
+    tau_TABLE(4, 5,:)=tau_4_5
+    tau_TABLE(4, 6,:)=tau_4_6
+    tau_TABLE(4, 7,:)=tau_4_7
+    tau_TABLE(4, 8,:)=tau_4_8
+    tau_TABLE(4, 9,:)=tau_4_9
+    tau_TABLE(4,10,:)=tau_4_10
+    tau_TABLE(4,11,:)=tau_4_11
+    tau_TABLE(4,12,:)=tau_4_12
+    tau_TABLE(4,13,:)=tau_4_13
+    tau_TABLE(4,14,:)=tau_4_14
+    tau_TABLE(4,15,:)=tau_4_15
+    tau_TABLE(4,16,:)=tau_4_16
+    tau_TABLE(4,17,:)=tau_4_17
+    tau_TABLE(4,18,:)=tau_4_18
+    tau_TABLE(4,19,:)=tau_4_19
+    tau_TABLE(4,20,:)=tau_4_20
+    tau_TABLE(4,21,:)=tau_4_21
+    tau_TABLE(4,22,:)=tau_4_22
+    tau_TABLE(4,23,:)=tau_4_23
+    tau_TABLE(4,24,:)=tau_4_24
+    tau_TABLE(4,25,:)=tau_4_25
+    tau_TABLE(4,26,:)=tau_4_26
+    tau_TABLE(4,27,:)=tau_4_27
+    tau_TABLE(4,28,:)=tau_4_28
+    tau_TABLE(4,29,:)=tau_4_29
+    tau_TABLE(4,30,:)=tau_4_30
+    tau_TABLE(4,31,:)=tau_4_31
+
+    tau_TABLE(5, 1,:)=tau_5_1
+    tau_TABLE(5, 2,:)=tau_5_2
+    tau_TABLE(5, 3,:)=tau_5_3
+    tau_TABLE(5, 4,:)=tau_5_4
+    tau_TABLE(5, 5,:)=tau_5_5
+    tau_TABLE(5, 6,:)=tau_5_6
+    tau_TABLE(5, 7,:)=tau_5_7
+    tau_TABLE(5, 8,:)=tau_5_8
+    tau_TABLE(5, 9,:)=tau_5_9
+    tau_TABLE(5,10,:)=tau_5_10
+    tau_TABLE(5,11,:)=tau_5_11
+    tau_TABLE(5,12,:)=tau_5_12
+    tau_TABLE(5,13,:)=tau_5_13
+    tau_TABLE(5,14,:)=tau_5_14
+    tau_TABLE(5,15,:)=tau_5_15
+    tau_TABLE(5,16,:)=tau_5_16
+    tau_TABLE(5,17,:)=tau_5_17
+    tau_TABLE(5,18,:)=tau_5_18
+    tau_TABLE(5,19,:)=tau_5_19
+    tau_TABLE(5,20,:)=tau_5_20
+    tau_TABLE(5,21,:)=tau_5_21
+    tau_TABLE(5,22,:)=tau_5_22
+    tau_TABLE(5,23,:)=tau_5_23
+    tau_TABLE(5,24,:)=tau_5_24
+    tau_TABLE(5,25,:)=tau_5_25
+    tau_TABLE(5,26,:)=tau_5_26
+    tau_TABLE(5,27,:)=tau_5_27
+    tau_TABLE(5,28,:)=tau_5_28
+    tau_TABLE(5,29,:)=tau_5_29
+    tau_TABLE(5,30,:)=tau_5_30
+    tau_TABLE(5,31,:)=tau_5_31
+
+    tau_TABLE(6, 1,:)=tau_6_1
+    tau_TABLE(6, 2,:)=tau_6_2
+    tau_TABLE(6, 3,:)=tau_6_3
+    tau_TABLE(6, 4,:)=tau_6_4
+    tau_TABLE(6, 5,:)=tau_6_5
+    tau_TABLE(6, 6,:)=tau_6_6
+    tau_TABLE(6, 7,:)=tau_6_7
+    tau_TABLE(6, 8,:)=tau_6_8
+    tau_TABLE(6, 9,:)=tau_6_9
+    tau_TABLE(6,10,:)=tau_6_10
+    tau_TABLE(6,11,:)=tau_6_11
+    tau_TABLE(6,12,:)=tau_6_12
+    tau_TABLE(6,13,:)=tau_6_13
+    tau_TABLE(6,14,:)=tau_6_14
+    tau_TABLE(6,15,:)=tau_6_15
+    tau_TABLE(6,16,:)=tau_6_16
+    tau_TABLE(6,17,:)=tau_6_17
+    tau_TABLE(6,18,:)=tau_6_18
+    tau_TABLE(6,19,:)=tau_6_19
+    tau_TABLE(6,20,:)=tau_6_20
+    tau_TABLE(6,21,:)=tau_6_21
+    tau_TABLE(6,22,:)=tau_6_22
+    tau_TABLE(6,23,:)=tau_6_23
+    tau_TABLE(6,24,:)=tau_6_24
+    tau_TABLE(6,25,:)=tau_6_25
+    tau_TABLE(6,26,:)=tau_6_26
+    tau_TABLE(6,27,:)=tau_6_27
+    tau_TABLE(6,28,:)=tau_6_28
+    tau_TABLE(6,29,:)=tau_6_29
+    tau_TABLE(6,30,:)=tau_6_30
+    tau_TABLE(6,31,:)=tau_6_31
+
+    tau_TABLE(7, 1,:)=tau_7_1
+    tau_TABLE(7, 2,:)=tau_7_2
+    tau_TABLE(7, 3,:)=tau_7_3
+    tau_TABLE(7, 4,:)=tau_7_4
+    tau_TABLE(7, 5,:)=tau_7_5
+    tau_TABLE(7, 6,:)=tau_7_6
+    tau_TABLE(7, 7,:)=tau_7_7
+    tau_TABLE(7, 8,:)=tau_7_8
+    tau_TABLE(7, 9,:)=tau_7_9
+    tau_TABLE(7,10,:)=tau_7_10
+    tau_TABLE(7,11,:)=tau_7_11
+    tau_TABLE(7,12,:)=tau_7_12
+    tau_TABLE(7,13,:)=tau_7_13
+    tau_TABLE(7,14,:)=tau_7_14
+    tau_TABLE(7,15,:)=tau_7_15
+    tau_TABLE(7,16,:)=tau_7_16
+    tau_TABLE(7,17,:)=tau_7_17
+    tau_TABLE(7,18,:)=tau_7_18
+    tau_TABLE(7,19,:)=tau_7_19
+    tau_TABLE(7,20,:)=tau_7_20
+    tau_TABLE(7,21,:)=tau_7_21
+    tau_TABLE(7,22,:)=tau_7_22
+    tau_TABLE(7,23,:)=tau_7_23
+    tau_TABLE(7,24,:)=tau_7_24
+    tau_TABLE(7,25,:)=tau_7_25
+    tau_TABLE(7,26,:)=tau_7_26
+    tau_TABLE(7,27,:)=tau_7_27
+    tau_TABLE(7,28,:)=tau_7_28
+    tau_TABLE(7,29,:)=tau_7_29
+    tau_TABLE(7,30,:)=tau_7_30
+    tau_TABLE(7,31,:)=tau_7_31
+
+    tau_TABLE(8, 1,:)=tau_8_1
+    tau_TABLE(8, 2,:)=tau_8_2
+    tau_TABLE(8, 3,:)=tau_8_3
+    tau_TABLE(8, 4,:)=tau_8_4
+    tau_TABLE(8, 5,:)=tau_8_5
+    tau_TABLE(8, 6,:)=tau_8_6
+    tau_TABLE(8, 7,:)=tau_8_7
+    tau_TABLE(8, 8,:)=tau_8_8
+    tau_TABLE(8, 9,:)=tau_8_9
+    tau_TABLE(8,10,:)=tau_8_10
+    tau_TABLE(8,11,:)=tau_8_11
+    tau_TABLE(8,12,:)=tau_8_12
+    tau_TABLE(8,13,:)=tau_8_13
+    tau_TABLE(8,14,:)=tau_8_14
+    tau_TABLE(8,15,:)=tau_8_15
+    tau_TABLE(8,16,:)=tau_8_16
+    tau_TABLE(8,17,:)=tau_8_17
+    tau_TABLE(8,18,:)=tau_8_18
+    tau_TABLE(8,19,:)=tau_8_19
+    tau_TABLE(8,20,:)=tau_8_20
+    tau_TABLE(8,21,:)=tau_8_21
+    tau_TABLE(8,22,:)=tau_8_22
+    tau_TABLE(8,23,:)=tau_8_23
+    tau_TABLE(8,24,:)=tau_8_24
+    tau_TABLE(8,25,:)=tau_8_25
+    tau_TABLE(8,26,:)=tau_8_26
+    tau_TABLE(8,27,:)=tau_8_27
+    tau_TABLE(8,28,:)=tau_8_28
+    tau_TABLE(8,29,:)=tau_8_29
+    tau_TABLE(8,30,:)=tau_8_30
+    tau_TABLE(8,31,:)=tau_8_31
+
+   !write(*,*) "ext_mie_bd_Table(:,1)=", ext_mie_bd_TABLE(:,1)
+   !pause
+  end subroutine read_esm_snicar_parameters
