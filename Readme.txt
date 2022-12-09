@@ -58,4 +58,4 @@ How to run the offline Noah LSM:
 
 	- simulation results: in sub directory 'Noah_data/results'
 
-Our thoughts and prayers are with Jetal Agnihotri, who was also involved in the development of this code
+############################### Our thoughts and prayers are with Jetal Agnihotri, who was also involved in the development of this code ##############################
