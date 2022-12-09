@@ -1,0 +1,745 @@
+MODULE module_sf_Noahlsm_gridded_input
+
+  contains
+
+!----------------------------------------------------------
+        SUBROUTINE READLAND(DIR,IX,JX,VEGTYP,SOLTYP,SLOPE,LAT,LON,LANDSEA,tbot,ISC)
+
+	IMPLICIT NONE
+
+        CHARACTER(len=256) :: DIR 
+        INTEGER, INTENT(IN) :: IX,JX
+        INTEGER :: I,J
+
+        INTEGER, INTENT(OUT), DIMENSION(IX,JX) :: VEGTYP
+        INTEGER, INTENT(OUT), DIMENSION(IX,JX) :: SOLTYP
+        INTEGER, INTENT(OUT), DIMENSION(IX,JX) :: SLOPE
+        INTEGER, INTENT(OUT), DIMENSION(IX,JX) :: LANDSEA
+        INTEGER, INTENT(OUT), DIMENSION(IX,JX) :: ISC     !soil color index
+        REAL,    INTENT(OUT), DIMENSION(IX,JX) :: LAT
+        REAL,    INTENT(OUT), DIMENSION(IX,JX) :: LON
+        REAL,    INTENT(OUT), DIMENSION(IX,JX) :: TBOT
+
+        INCLUDE 'netcdf.inc'
+
+        INTEGER STATUS
+        INTEGER NCID
+        INTEGER START(2), COUNT(2)
+        DATA START /1,  1/       
+        INTEGER lonID,latID,landID,plotID,vegeID,soilID,tbotID,iscID
+
+        COUNT(1) = IX
+        COUNT(2) = JX
+
+        STATUS=NF_OPEN(TRIM(DIR)//'/static/lon_lat.nc',NF_NOWRITE,NCID)
+        STATUS=NF_INQ_VARID (NCID, 'lat2d', latID)
+        STATUS=NF_INQ_VARID (NCID, 'lon2d', lonID)
+        status=NF_ENDDEF(ncid)
+        STATUS=NF_GET_VARA_real(NCID,latID,START,COUNT,LAT)
+        STATUS=NF_GET_VARA_real(NCID,lonID,START,COUNT,LON)
+        STATUS=NF_CLOSE(NCID)
+
+        STATUS=NF_OPEN(TRIM(DIR)//'/static/landmask.nc',NF_NOWRITE,NCID)
+        STATUS=NF_INQ_VARID (NCID, 'landmask', landID)
+        status=NF_ENDDEF(ncid)
+        STATUS=NF_GET_VARA_INT(NCID,landID,START,COUNT,LANDSEA)
+        STATUS=NF_CLOSE(NCID)
+ 
+!        STATUS=NF_OPEN(TRIM(DIR)//'/static/soilcolor.nc',NF_NOWRITE,NCID)
+!        STATUS=NF_INQ_VARID (NCID, 'SC', iscID)
+!        status=NF_ENDDEF(ncid)
+!        STATUS=NF_GET_VARA_INT(NCID,iscID,START,COUNT,isc)
+!        STATUS=NF_CLOSE(NCID)
+         ISC(:,:)     = -999     !
+ 
+        STATUS=NF_OPEN(TRIM(DIR)//'/static/veg_soil.nc',NF_NOWRITE,NCID)
+        STATUS=NF_INQ_VARID (NCID, 'VEG2D', vegeID)
+!        STATUS=NF_INQ_VARID (NCID, 'TOPSOIL2D', soilID)
+        STATUS=NF_INQ_VARID (NCID, 'BOTSOIL2D', soilID)
+        status=NF_ENDDEF(ncid)
+        STATUS=NF_GET_VARA_INT(NCID,vegeID,START,COUNT,VEGTYP)
+        STATUS=NF_GET_VARA_INT(NCID,soilID,START,COUNT,SOLTYP)
+        STATUS=NF_CLOSE(NCID)
+ 
+        STATUS=NF_OPEN(TRIM(DIR)//'/static/tbot.nc',NF_NOWRITE,NCID)
+        STATUS=NF_INQ_VARID (NCID, 'TBOT', tbotID)
+        status=NF_ENDDEF(ncid)
+        STATUS=NF_GET_VARA_real(NCID,tbotID,START,COUNT,tbot)
+        STATUS=NF_CLOSE(NCID)
+
+        OPEN(10,FILE='surface_datalog.dat')
+        write(10,*)'IX, IY,     longitue   latitude   landmask  vegetype  soiltype    isc   tbot' 
+        DO J=1,JX
+        DO I=1,IX
+          if(soltyp(i,j) == 14) vegtyp(i,j) = 16
+          SLOPE(I,J)   = 3     !only used in runoff option 3
+          if(LANDSEA(I,J) == 1) ISC(I,J)     = 2     !1-lightest -> 8-darkest
+          write(10,10)I,J,LON(I,J),LAT(I,J),LANDSEA(I,J),VEGTYP(I,J),SOLTYP(I,J),ISC(I,J),TBOT(I,J) 
+        ENDDO
+        ENDDO
+ 10     FORMAT(2X,2I5,2F10.2,4I10,F10.2)
+        CLOSE(10)
+        write(6,*) '------------- successful reading surface data ------------------'
+! ----------------------------------------------------------------
+  END SUBROUTINE READLAND
+! ----------------------------------------------------------------
+  SUBROUTINE READINIT(dir      ,nx        ,ny       ,nsoil    ,nsnow   ,fini    , &
+                      soiltypxy,SLOPETYPXY,croptypxy,soilcolor,zsoil   ,alboldxy, &
+                      fwetxy   ,sneqvoxy  ,qsnowxy  ,wslakexy ,eahxy   ,tahxy   , &
+                      smcxy    ,stcxy     ,sh2oxy   ,tsnoxy   ,snicexy ,snliqxy , &
+                      zsnsoxy  ,isnowxy   ,snowhxy  ,sneqvxy  ,canliqxy,canicexy, &
+                      tgxy     ,tvxy      ,waxy     ,wtxy     ,zwtxy   ,lfmassxy, &
+                      rootmsxy ,stmassxy  ,woodxy   ,socxy    ,wdocxy  ,ddocxy  , &
+                      micxy    ,wenzxy    ,denzxy   ,so2xy    ,xlaixy  ,sldpth  , &
+                      xsaixy   ,cmxy      ,chxy     ,vegtypxy ,mqxy    ,krxy    , &
+                      frootxy  ,rtmassxy  ,QSFC1D   ,STBLCP   ,FASTCP  )
+
+        use module_sf_noahmplsm
+
+        USE NOAHMP_TABLES
+
+	implicit none
+
+        type (noahmp_parameters) :: parameters
+
+        character(len=256)  :: dir
+        character(len=256)  :: fini
+        integer, intent(in) :: nx,ny
+        integer, intent(in) :: nsoil
+        integer, intent(in) :: nsnow
+        real,    intent(in) :: zsoil(nsoil)
+        real,    intent(in) :: sldpth(nsoil)
+        integer, intent(in), dimension(nx,ny)     :: soiltypxy
+        integer, intent(in), dimension(nx,ny)     :: vegtypxy
+        integer, intent(in), dimension(nx,ny)     :: SLOPETYPXY
+        integer, intent(in), dimension(nx,ny)     :: croptypxy
+        integer, intent(in), dimension(nx,ny)     :: soilcolor
+
+        integer :: ix,iy,iz,i
+
+        real, intent(out), dimension(nx,ny)                :: fwetxy
+        real, intent(out), dimension(nx,ny)                :: sneqvoxy
+        real, intent(out), dimension(nx,ny)                :: alboldxy
+        real, intent(out), dimension(nx,ny)                :: qsnowxy
+        real, intent(out), dimension(nx,ny)                :: cmxy
+        real, intent(out), dimension(nx,ny)                :: chxy
+        real, intent(out), dimension(nx,ny)                :: wslakexy
+        real, intent(out), dimension(nx,ny)                :: eahxy
+        real, intent(out), dimension(nx,ny)                :: tahxy
+        real, intent(out), dimension(nx,ny)                :: krxy
+        real, intent(out), dimension(nx,ny,       1:nsoil) :: smcxy    ! 1
+!       real, intent(out), dimension(nx,ny,       1:nsoil) :: stcxy    ! 2
+        real, intent(out), dimension(nx,ny,-nsnow+1:nsoil) :: stcxy    ! 2
+        real, intent(out), dimension(nx,ny,       1:nsoil) :: sh2oxy   ! 3
+        real, intent(out), dimension(nx,ny,-nsnow+1:    0) :: tsnoxY   ! 4
+        real, intent(out), dimension(nx,ny,-nsnow+1:    0) :: snicexy  ! 5
+        real, intent(out), dimension(nx,ny,-nsnow+1:    0) :: snliqxy  ! 6
+        real, intent(out), dimension(nx,ny,-nsnow+1:nsoil) :: zsnsoxy  ! 7
+        real, intent(out), dimension(nx,ny)                :: tvxy     ! 8
+        real, intent(out), dimension(nx,ny)                :: mqxy     ! 8
+        real, intent(out), dimension(nx,ny)                :: tgxy     ! 9
+        real, intent(out), dimension(nx,ny)                :: canliqxy !10
+        real, intent(out), dimension(nx,ny)                :: canicexy !11
+        real, intent(out), dimension(nx,ny)                :: snowhxy  !12
+        real, intent(out), dimension(nx,ny)                :: sneqvxy  !13
+        real, intent(out), dimension(nx,ny)                :: waxy     !14
+        real, intent(out), dimension(nx,ny)                :: wtxy     !15
+        real, intent(out), dimension(nx,ny)                :: zwtxy    !16
+        integer, intent(out), dimension(nx,ny)             :: isnowxy  !17
+        real, intent(out), dimension(nx,ny)                :: lfmassxy !18
+        real, intent(out), dimension(nx,ny,1:nsoil)        :: rootmsxy !19
+        real, intent(out), dimension(nx,ny,1:nsoil)        :: frootxy  !19
+        real, intent(out), dimension(nx,ny)                :: stmassxy !20
+        real, intent(out), dimension(nx,ny)                :: rtmassxy !20
+        real, intent(out), dimension(nx,ny)                :: woodxy   !21
+        real, intent(out), dimension(nx,ny)                :: socxy    !22
+        real, intent(out), dimension(nx,ny)                :: wdocxy   !23
+        real, intent(out), dimension(nx,ny)                :: ddocxy   !24
+        real, intent(out), dimension(nx,ny)                :: micxy    !25
+        real, intent(out), dimension(nx,ny)                :: wenzxy   !26
+        real, intent(out), dimension(nx,ny)                :: denzxy   !27
+        real, intent(out), dimension(nx,ny)                :: so2xy    !29
+        real, intent(out), dimension(nx,ny)                :: xlaixy   !30
+        real, intent(out), dimension(nx,ny)                :: xsaixy   !31
+        real, intent(out), dimension(nx,ny)                :: QSFC1D   !31
+        real, intent(out), dimension(nx,ny)                :: STBLCP   !31
+        real, intent(out), dimension(nx,ny)                :: FASTCP   !31
+
+        real, dimension(nx,ny)      :: soilcxy    !total soil carbon
+
+        logical readini                   !true if read in initial data set
+
+
+        write(*,*) SLCATS 
+        write(*,*) 'fini=', TRIM(fini)
+
+        if (fini == 'arbitrary initialization') then
+           readini  = .false.
+        else
+           readini  = .true.
+        end if
+
+!arbitary values
+
+       do iy=1,ny
+       do ix=1,nx
+        cmxy(ix,iy)             = 0.0     ! only for SCFDIF2
+        chxy(ix,iy)             = 0.0     ! only for SCFDIF2
+        fwetxy(ix,iy)           = 0.0     ! wetted fraction of canopy
+        sneqvoxy(ix,iy)         = 0.0     ! snow water equivalent at last time step
+        alboldxy(ix,iy)         = 0.65    ! snow albedo at previous time step (CLASS type)
+        qsnowxy(ix,iy)          = 0.0     ! snowfall on the ground through the canopy
+        xsaixy(ix,iy)           = 0.1     ! stem area index
+        xlaixy(ix,iy)           = 1.0     ! leaf area index
+        eahxy(ix,iy)            = 2000.   ! water vapor pressure within the canopy air
+        tahxy(ix,iy)            = 287.    ! temperature within the canopy air
+        krxy(ix,iy)             = 0.8     ! btran
+        QSFC1D(ix,iy)           = 0.015   !
+       end do
+       end do
+
+!read from a file
+  10  format(1x,3i5,13f12.2)
+
+        if (readini) then
+            open(100,file =fini,form='unformatted', status = 'old')
+            do ix = 1,nx
+            do iy = 1,ny
+             if(vegtypxy(ix,iy) > 0) then
+
+               CALL TRANSFER_MP_PARAMETERS(VEGTYPXY(ix,iy),SOILTYPXY(ix,iy),  &
+                    SLOPETYPXY(ix,iy),SOILCOLOR(ix,iy),CROPTYPXY(ix,iy),parameters)
+
+               read(100) i, i, isnowxy(ix,iy)
+               read(100)(smcxy(ix,iy,iz),iz=1,nsoil),&
+                          (stcxy(ix,iy,iz),iz=isnowxy(ix,iy)+1,nsoil),&
+                          (sh2oxy(ix,iy,iz),iz=1,nsoil)
+               read(100) wslakexy(ix,iy)  ! lake water storage
+               if(isnowxy(ix,iy) .lt. 0) then
+               read(100)(snicexy(ix,iy,iz),iz = isnowxy(ix,iy)+1,0),&
+                          (snliqxy(ix,iy,iz),iz = isnowxy(ix,iy)+1,0)
+               end if
+               read(100)(zsnsoxy(ix,iy,iz),iz = isnowxy(ix,iy)+1,nsoil)
+               read(100)tvxy(ix,iy),tgxy(ix,iy),canicexy(ix,iy),canliqxy(ix,iy),&
+                          snowhxy(ix,iy),sneqvxy(ix,iy),waxy(ix,iy),wtxy(ix,iy),&
+                          zwtxy(ix,iy)
+               read(100)lfmassxy(ix,iy),rtmassxy(ix,iy),&
+                        (rootmsxy(ix,iy,iz),iz=1,parameters%nroot),&
+                          stmassxy(ix,iy), &
+                          woodxy(ix,iy), &
+                          STBLCP(ix,iy), &
+                          FASTCP(ix,iy), &
+                          socxy (ix,iy), &
+                          wdocxy(ix,iy), &
+                          ddocxy(ix,iy), &
+                          micxy (ix,iy), &
+                          wenzxy(ix,iy), &
+                          denzxy(ix,iy)
+               read(100)mqxy(ix,iy),krxy(ix,iy),(frootxy(ix,iy,iz),iz=1,parameters%nroot)
+
+     IF(ix == 1.and. iy == 191) THEN
+        write(*,*) parameters%nroot
+        write(*,*) 'ROOTMS'
+        write(*,*) ROOTMSxy(ix,iy,:)
+     END IF
+
+!               !equilibrium water table depth
+!               if(gw == 1) then
+!                  s_node              = MIN(1.0,smcxy(ix,iy,4)/SMCMAX )                   
+!                  zwtxy(ix,iy)        = 2.0   + PSISAT*1000.*s_node**(-BEXP)
+!                  waxy(ix,iy)         = 5000. - (zwtxy(ix,iy) - 2.0)*0.2*1000.
+!                  wtxy(ix,iy)         = waxy(ix,iy)
+!               end if
+
+             end if
+            end do
+            end do
+
+            do iy = 1,ny
+               write(20,'(20F10.2)')(mqxy(ix,iy),ix=1,nx)
+               write(21,'(20F10.2)')(wdocxy(ix,iy),ix=1,nx)
+            end do
+
+            close(100)
+        else
+
+!arbitary values
+
+            do iy=1,ny
+            do ix=1,nx
+              if(vegtypxy(ix,iy) > 0) then
+
+              CALL TRANSFER_MP_PARAMETERS(VEGTYPXY(ix,iy),SOILTYPXY(ix,iy),  &
+                   SLOPETYPXY(ix,iy),SOILCOLOR(ix,iy),CROPTYPXY(ix,iy),parameters)
+     IF(ix == 1.and. iy == 191) THEN
+        write(*,*) 'nroot==============',parameters%nroot
+     END IF
+
+              !write(*,*) (parameters%smcmax(i),i=1, SLCATS)
+                do iz = 1,nsoil
+                  smcxy (ix,iy,iz)=min(0.5,0.8*parameters%smcmax(iz) )
+                  sh2oxy(ix,iy,iz)=min(0.5,0.8*parameters%smcmax(iz) )
+                end do
+
+                if(ix == 10 .and. iy == 211) then
+                 write(*,*) soiltypxy(ix,iy)
+                 write(*,*) 1.0*parameters%smcmax(1)
+                 write(*,*) smcxy(ix,iy,:)
+                 write(*,*) sh2oxy(ix,iy,:)
+                end if
+
+                do iz = 1, nsoil
+                  stcxy  (ix,iy,iz)   = 287.0
+                end do
+                  frootxy(ix,iy,1)   = 0.05
+                  frootxy(ix,iy,2)   = 0.15
+                  frootxy(ix,iy,3)   = 0.3
+                  frootxy(ix,iy,4)   = 0.5
+
+                canliqxy(ix,iy)     = 0.0
+                canicexy(ix,iy)     = 0.0
+                tvxy(ix,iy)         = 287.0
+                tgxy(ix,iy)         = 287.0
+                snowhxy(ix,iy)      = 0.0
+                sneqvxy(ix,iy)      = 0.0
+
+                wslakexy(ix,iy)     = 0.0     ! lake water storage
+                waxy(ix,iy)         = 4500.
+                wtxy(ix,iy)         = 4500.
+                zwtxy(ix,iy)        = (25. + 2.0) - waxy(ix,iy)/1000/0.2
+
+                lfmassxy(ix,iy)     = 100.0       !
+                stmassxy(ix,iy)     = 50.0
+                STBLCP  (ix,iy)     = 5000.0
+                FASTCP  (ix,iy)     = 5000.0
+
+                do iz = 1, parameters%nroot
+                  rootmsxy(ix,iy,iz)= 100.0*sldpth(iz)      !g/m3 * dz
+
+                  if(vegtypxy(ix,iy) .eq. 8  .or. vegtypxy(ix,iy) .eq.  9 .or. &
+                     vegtypxy(ix,iy) .eq. 13 .or. vegtypxy(ix,iy) .eq. 18 .or. &
+                     vegtypxy(ix,iy) .eq. 21 ) then
+                    !rootmsxy(ix,iy,iz)= 100.0*sldpth(iz)      !g/m3 * dz
+                     rootmsxy(ix,iy,iz)= 50.0*sldpth(iz)      !g/m3 * dz
+                  end if
+
+                  if(vegtypxy(ix,iy) .eq. 2 .or. vegtypxy(ix,iy) .eq. 3 .or. &
+                     vegtypxy(ix,iy) .eq. 4 .or. vegtypxy(ix,iy) .eq. 5) then  
+                    !rootmsxy(ix,iy,iz)= 300.0*sldpth(iz)      !g/m3 * dz
+                     rootmsxy(ix,iy,iz)= 150.0*sldpth(iz)      !g/m3 * dz 4-L roots
+                  end if
+
+                  if(vegtypxy(ix,iy) .eq. 6 .or. vegtypxy(ix,iy) .eq. 7) then  
+                    !rootmsxy(ix,iy,iz)= 300.0*sldpth(iz)      !g/m3 * dz
+                     rootmsxy(ix,iy,iz)= 200.0*sldpth(iz)      !g/m3 * dz 4-L roots
+                  end if
+
+                  if(vegtypxy(ix,iy) .eq. 22) then
+                    !rootmsxy(ix,iy,iz)= 100.0*sldpth(iz)      !g/m3 * dz
+                     rootmsxy(ix,iy,iz)= 50.0*sldpth(iz)      !g/m3 * dz
+                  end if
+                end do
+
+                rtmassxy(ix,iy) = 0.0
+                do iz = 1, nsoil
+                  rtmassxy(ix,iy) = rtmassxy(ix,iy) + rootmsxy(ix,iy,iz)
+                enddo
+
+                woodxy(ix,iy)       = 10000.0 * wdpool_table(vegtypxy(ix,iy))
+
+                so2xy (ix,iy)       = 0.21             !%
+                soilcxy(ix,iy)      = 12000.           !g/m2
+                socxy(ix,iy)        = soilcxy(ix,iy)*0.960
+                wdocxy(ix,iy)       = soilcxy(ix,iy)*0.000
+                ddocxy(ix,iy)       = soilcxy(ix,iy)*0.0
+                micxy(ix,iy)        = soilcxy(ix,iy)*0.020
+                wenzxy(ix,iy)       = soilcxy(ix,iy)*0.000
+                denzxy(ix,iy)       = soilcxy(ix,iy)*0.000
+
+                mqxy(ix,iy)         = 5.0    !kg/m2
+                krxy(ix,iy)         = 0.9    !btran
+                if(vegtypxy(ix,iy) == 16 .or. vegtypxy(ix,iy) == 19 .or. vegtypxy(ix,iy) == 24) then
+                mqxy(ix,iy)         = 0.0    !kg/m2
+                end if
+
+
+              end if
+
+            enddo
+            enddo
+
+            ! 5 outputs
+            call snow_init (nx     ,ny     ,nsnow  ,nsoil   ,zsoil  , &
+                            snowhxy,zsnsoxy,tsnoxy ,snicexy,snliqxy , &
+                            isnowxy,vegtypxy)
+
+            !stcxy(:,:,isnowxy(ix,iy)+1:0) =  tsnoxy(:,:,isnowxy(ix,iy)+1:0)
+
+            do iy=1,ny
+            do ix=1,nx
+            if(vegtypxy(ix,iy) > 0) then
+               do iz = isnowxy(ix,iy)+1,0
+                stcxy(ix,iy,iz) =  tsnoxy(ix,iy,iz)
+               end do
+            end if
+            end do
+            end do
+        end if
+
+        write(6,*) '------------- successful initialization ------------------'
+
+! --------------------------------------------------------
+  END SUBROUTINE READINIT
+! ------------------------------------------------------------------------------------------
+  SUBROUTINE SNOW_INIT (IX     ,JX     ,NSNOW  ,NSOIL   ,ZSOIL  ,SNODEP  ,  &
+                        ZSNSOXY,TSNOXY ,SNICEXY,SNLIQXY ,ISNOWXY,vegtypxy)
+
+! ------------------------------------------------------------------------------------------
+   IMPLICIT NONE
+! ------------------------------------------------------------------------------------------
+   INTEGER, INTENT(IN) :: IX,JX,NSNOW,NSOIL
+   integer, intent(in), dimension(ix,jx) :: vegtypxy
+   REAL,    INTENT(IN), DIMENSION(IX,JX) :: SNODEp
+   REAL, DIMENSION(1:NSOIL) :: ZSOIL
+   INTEGER :: I,J,IZ
+
+   INTEGER, INTENT(OUT), DIMENSION(IX,JX) :: ISNOWXY
+   REAL,    INTENT(OUT), DIMENSION(IX,JX,-NSNOW+1:NSOIL) :: ZSNSOXY
+   REAL,    INTENT(OUT), DIMENSION(IX,JX,-NSNOW+1:0) :: TSNOXY
+   REAL,    INTENT(OUT), DIMENSION(IX,JX,-NSNOW+1:0) :: SNICEXY
+   REAL,    INTENT(OUT), DIMENSION(IX,JX,-NSNOW+1:0) :: SNLIQXY
+
+!local
+   REAL,    DIMENSION(IX,JX,-NSNOW+1:    0) :: DZSNOXY
+   REAL,    DIMENSION(IX,JX,-NSNOW+1:NSOIL) :: DZSNSOXY
+! ------------------------------------------------------------------------------------------
+
+
+   DO J = 1, JX
+   DO I = 1, IX
+   if(vegtypxy(i,j) > 0) then
+    IF (SNODEP(I,J) < 0.025) THEN
+           ISNOWXY(I,J) = 0
+           DZSNOXY(I,J,-NSNOW+1:0) = 0.
+        ELSE
+           IF ((SNODEP(I,J) >= 0.025) .AND. (SNODEP(I,J) <= 0.05)) THEN
+              ISNOWXY(I,J)     = -1
+              DZSNOXY(I,J,0)  = SNODEP(I,J)
+           ELSE IF ((SNODEP(I,J) > 0.05) .AND. (SNODEP(I,J) <= 0.10)) THEN
+              ISNOWXY(I,J)     = -2
+              DZSNOXY(I,J,-1) = SNODEP(I,J)/2.
+              DZSNOXY(I,J, 0) = SNODEP(I,J)/2.
+           ELSE IF ((SNODEP(I,J) > 0.10) .AND. (SNODEP(I,J) <= 0.25)) THEN
+              ISNOWXY(I,J)     = -2
+              DZSNOXY(I,J,-1) = 0.05
+              DZSNOXY(I,J, 0) = SNODEP(I,J) - DZSNOXY(I,J,-1)
+           ELSE IF ((SNODEP(I,J) > 0.25) .AND. (SNODEP(I,J) <= 0.35)) THEN
+              ISNOWXY(I,J)     = -3
+              DZSNOXY(I,J,-2) = 0.05
+              DZSNOXY(I,J,-1) = 0.5*(SNODEP(I,J)-DZSNOXY(I,J,-2))
+              DZSNOXY(I,J, 0) = 0.5*(SNODEP(I,J)-DZSNOXY(I,J,-2))
+           ELSE IF (SNODEP(I,J) > 0.35) THEN
+              ISNOWXY(I,J)     = -3
+              DZSNOXY(I,J,-2) = 0.05
+              DZSNOXY(I,J,-1) = 0.10
+              DZSNOXY(I,J, 0) = SNODEP(I,J) - DZSNOXY(I,J,-1) - DZSNOXY(I,J,-2)
+           END IF
+    END IF
+  END IF
+  ENDDO
+  ENDDO
+
+  DO J = 1, JX
+  DO I = 1, IX
+   if(vegtypxy(i,j) > 0) then
+       TSNOXY( I,J,-NSNOW+1:0) = 0.
+       SNICEXY(I,J,-NSNOW+1:0) = 0.
+       SNLIQXY(I,J,-NSNOW+1:0) = 0.
+      DO IZ = ISNOWXY(I,j)+1, 0
+         TSNOXY(I,J,IZ)  = 270.  ! [k]
+         SNLIQXY(I,J,IZ) = 0.00 * DZSNOXY(I,J,IZ) * 200.
+         SNICEXY(I,J,IZ) = 1.00 * DZSNOXY(I,J,IZ) * 200.  ! [mm or kg/m2]
+      END DO
+
+       DO IZ = ISNOWXY(I,J)+1, 0
+            DZSNSOXY(I,J,IZ) = -DZSNOXY(I,J,IZ)
+       END DO
+
+       DZSNSOXY(I,J,1) = ZSOIL(1)
+       DO IZ = 2,NSOIL
+            DZSNSOXY(I,J,IZ) = (ZSOIL(IZ) - ZSOIL(IZ-1))
+       END DO
+
+       ZSNSOXY(I,J,ISNOWXY(I,J)+1) = DZSNSOXY(I,J,ISNOWXY(I,J)+1)
+       DO IZ = ISNOWXY(I,J)+2 ,NSOIL
+           ZSNSOXY(I,J,IZ) = ZSNSOXY(I,J,IZ-1) + DZSNSOXY(I,J,IZ)
+       ENDDO
+   end if
+  END DO
+  END DO
+
+!  DO IZ = -NSNOW+1, NSOIL
+!  WRITE(*,'(I10,4F10.3)')  IZ,ZSNSOXY(1,1,IZ),TSNOXY(1,1,IZ),SNICEXY(1,1,IZ),SNLIQXY(1,1,IZ)
+!  END DO
+
+  END SUBROUTINE SNOW_INIT
+! ==================================================================================================
+! ----------------------------------------------------------------------
+  SUBROUTINE EQSMOISTURE(NSOIL  ,  ZSOIL , SMCMAX , SMCWLT, DWSAT , DKSAT ,BEXP , & !in
+                         SMCEQ                          )  !out
+! ----------------------------------------------------------------------
+  IMPLICIT NONE
+! ----------------------------------------------------------------------
+! input
+  INTEGER,                         INTENT(IN) :: NSOIL !no. of soil layers
+  REAL, DIMENSION(       1:NSOIL), INTENT(IN) :: ZSOIL !depth of soil layer-bottom [m]
+  REAL,                            INTENT(IN) :: SMCMAX , SMCWLT, BEXP , DWSAT, DKSAT
+!output
+  REAL,  DIMENSION(      1:NSOIL), INTENT(OUT) :: SMCEQ  !equilibrium soil water content [m3/m3]
+!local
+  INTEGER                                     :: K , ITER
+  REAL                                        :: DDZ , SMC, FUNC, DFUNC , AA, BB , EXPON, DX
+
+!gmmcompute equilibrium soil moisture content for the layer when !wtd=zsoil(k)
+
+
+   DO K=1,NSOIL
+
+            IF ( K == 1 )THEN
+                DDZ = -ZSOIL(K+1) * 0.5
+            ELSEIF ( K < NSOIL ) THEN
+                DDZ = ( ZSOIL(K-1) - ZSOIL(K+1) ) * 0.5
+            ELSE
+                DDZ = ZSOIL(K-1) - ZSOIL(K)
+            ENDIF
+
+!use Newton-Raphson method to find eq soil moisture
+
+            EXPON = BEXP +1.
+            AA = DWSAT/DDZ
+            BB = DKSAT / SMCMAX ** EXPON
+
+            SMC = 0.5 * SMCMAX
+
+         DO ITER = 1, 100
+            FUNC = (SMC - SMCMAX) * AA +  BB * SMC ** EXPON
+            DFUNC = AA + BB * EXPON * SMC ** BEXP
+
+            DX = FUNC/DFUNC
+            SMC = SMC - DX
+            IF ( ABS (DX) < 1.E-6)EXIT
+         ENDDO
+
+!             SMCEQ(K) = MIN(MAX(SMC,SMCWLT),SMCMAX*0.99)
+             SMCEQ(K) = MIN(MAX(SMC,1.E-4),SMCMAX*0.99)
+   ENDDO
+
+  END  SUBROUTINE EQSMOISTURE
+
+! ==================================================================================================
+  SUBROUTINE READFORC(IX,JX,DT,IYEAR,IMON,IDAY,IHOUR,DIR,TMP2M,QAIR,DLWRF,U,V,   &
+          PRES,DSWRF,PRCP)
+
+        IMPLICIT NONE
+
+        CHARACTER(len=256),INTENT(IN) :: DIR
+
+        INTEGER, INTENT(IN) :: IX,JX
+        INTEGER, INTENT(IN) :: iyear,imon,iday,ihour
+        REAL, INTENT(IN) :: DT
+        REAL, INTENT(OUT), DIMENSION(IX,JX) :: DLWRF
+        REAL, INTENT(OUT), DIMENSION(IX,JX) :: DSWRF
+        REAL, INTENT(OUT), DIMENSION(IX,JX) :: PRCP
+        REAL, INTENT(OUT), DIMENSION(IX,JX) :: TMP2M
+        REAL, INTENT(OUT), DIMENSION(IX,JX) :: U
+        REAL, INTENT(OUT), DIMENSION(IX,JX) :: V
+        REAL, INTENT(OUT), DIMENSION(IX,JX) :: QAIR
+        REAL, INTENT(OUT), DIMENSION(IX,JX) :: PRES
+
+        INTEGER :: I,J,ivar
+        INTEGER, PARAMETER :: nvar = 8
+        REAL, allocatable, dimension(:,:) :: var
+        REAL, allocatable, dimension(:,:,:) :: varin
+        real :: ea(IX,JX), eair(IX,JX)
+
+        INCLUDE 'netcdf.inc'
+
+        CHARACTER(len=256) :: ncfile
+        CHARACTER(len=12) ::varname(nvar)
+        INTEGER STATUS
+        INTEGER NCIDin
+        INTEGER varID
+        INTEGER START(2), COUNT(2)
+        DATA START / 1,  1/    !starting point
+
+        data (varname(ivar), ivar=1,nvar) &
+                      /'TAIR','QAIR','UAIR','VAIR', &
+                       'PAIR','PRCP','SWDOWN','LWDOWN'  /
+
+        allocate( var   (1:ix,1:jx) )
+        allocate( varin (1:ix,1:jx,1:nvar) )
+
+        COUNT(1) = IX
+        COUNT(2) = JX
+
+        !$OMP PARALLEL DO
+        do J=1,JX
+        do I=1,IX
+             var(i,j)      = -999.
+             DSWRF(I,J)    = -999.
+             DLWRF(I,J)    = -999.
+             PRCP(I,J)     = -999.
+             U(I,J)        = -999.
+             V(I,J)        = -999.
+             TMP2M(I,J)    = -999.
+             QAIR(I,J)     = -999.
+             PRES(I,J)     = -999.
+        end do
+        end do
+        !$OMP END PARALLEL DO
+
+        write(*,*) '-------------------------------------------'
+       !write(*,*) iyear,imon,iday,ihour
+        write(ncfile,100) iyear,imon,iday,ihour
+         if(imon < 10) then
+           if(iday < 10) then
+              if(ihour < 10) then
+                  write(ncfile,100) iyear,iyear,imon,iday,ihour
+  100             format('/',i4,'/',i4,'0',i1,'0',i1,'0',i1,'.nc')
+              else
+                  write(ncfile,200) iyear,iyear,imon,iday,ihour
+  200             format('/',i4,'/',i4,'0',i1,'0',i1,i2,'.nc')
+              end if
+           else
+              if(ihour < 10) then
+                  write(ncfile,300) iyear,iyear,imon,iday,ihour
+  300             format('/',i4,'/',i4,'0',i1,i2,'0',i1,'.nc')
+              else
+                  write(ncfile,400) iyear,iyear,imon,iday,ihour
+  400             format('/',i4,'/',i4,'0',i1,i2,i2,'.nc')
+              end if
+           end if
+         else
+           if(iday < 10) then
+              if(ihour < 10) then
+                  write(ncfile,500) iyear,iyear,imon,iday,ihour
+  500             format('/',i4,'/',i4,i2,'0',i1,'0',i1,'.nc')
+              else
+                  write(ncfile,600) iyear,iyear,imon,iday,ihour
+  600             format('/',i4,'/',i4,i2,'0',i1,i2,'.nc')
+              end if
+           else
+              if(ihour < 10) then
+                  write(ncfile,700) iyear,iyear,imon,iday,ihour
+  700             format('/',i4,'/',i4,i2,i2,'0',i1,'.nc')
+              else
+                  write(ncfile,800) iyear,iyear,imon,iday,ihour
+  800             format('/',i4,'/',i4,i2,i2,i2,'.nc')
+              end if
+           end if
+        end if
+
+        !ncfile = TRIM(DIR)//ncfile
+        ncfile = "/home/u4/niug/5TB/B2SERVER/gniu/NLDAS/NC"//ncfile
+        write(*,*) 'READFORC: opening ',trim(ncfile)
+        STATUS=NF_OPEN(ncfile,NF_NOWRITE,NCIDin)
+!        write(*,*) '-------------------------------------------'
+
+        do ivar = 1,  nvar
+           !write(*,*) varname(ivar)
+           STATUS=NF_INQ_VARID (NCIDin, varname(ivar), varID)
+           STATUS=NF_GET_VARA_real(NCIDin,varID,START,COUNT,var)
+           !write(*,10) ((var(i,j),i=IX/2,IX/2+4),j=JX/2,JX/2+4)
+           !write(*,10) ((var(i,j),i=317,321),j=4,4)
+           !$OMP PARALLEL DO
+           do I=1,IX
+           do J=1,JX
+             varin(i,j,ivar) = var(i,j)
+           end do
+           end do
+           !$OMP END PARALLEL DO
+        end do
+        STATUS=NF_CLOSE(NCIDin)
+
+        !!$OMP PARALLEL DO
+        do I=1,IX
+        do J=1,JX
+              TMP2M(I,J)    = varin(i,j,1)
+              QAIR(I,J)     = varin(i,j,2)
+              U(I,J)        = sqrt(varin(i,j,3)**2 + varin(i,j,4)**2)
+              V(I,J)        = 0.
+              PRES(I,J)     = varin(i,j,5)
+              PRCP(I,J)     = varin(i,j,6) / DT         ! NLDAS precipitation
+              DSWRF(I,J)    = varin(i,j,7)
+              DLWRF(I,J)    = varin(i,j,8)
+
+              !IF(DLWRF(I,J) >= 500. ) THEN
+              !   EAIR(i,j)   = QAIR(I,J)*PRES(I,J) / (0.622+0.378*QAIR(I,J))
+              !   ea(i,j)     = 0.70 + 5.95e-05 * 0.01*EAIR(i,j)*exp(1500.0/TMP2M(I,J))
+              !   DLWRF(I,J)  = ea(i,j) * 5.67e-08 *TMP2M(I,J)**4
+              !end if
+        end do
+        end do
+        !!$OMP END PARALLEL DO
+
+  10 format(1x,5f15.5)
+
+      return
+! -----------------------------------------------------
+  END SUBROUTINE READFORC
+! -----------------------------------------------------
+! ==================================================================================================
+  SUBROUTINE READVEG(DIR,IX,JX,LANDSEA,SHDFAC,SHDFACMX)
+
+        CHARACTER(len=256)  :: DIR
+        INTEGER, INTENT(IN) :: IX,JX
+        INTEGER, INTENT(IN), DIMENSION(IX,JX) :: LANDSEA
+        REAL, INTENT(OUT), DIMENSION(IX,JX,12) :: SHDFAC
+        REAL, INTENT(OUT), DIMENSION(IX,JX)    :: SHDFACMX
+        INTEGER :: I,J,IM
+
+        INCLUDE 'netcdf.inc'
+
+        INTEGER STATUS,NCID
+        INTEGER START(3), COUNT(3)
+        DATA START /1,  1,  1/       
+        INTEGER gvfID
+
+        COUNT(1) = IX
+        COUNT(2) = JX
+        COUNT(3) = 12
+
+        STATUS=NF_OPEN(TRIM(DIR)//'/static/gvf.nc',NF_NOWRITE,NCID)
+        STATUS=NF_INQ_VARID (NCID, 'GVF', gvfID)
+        status=NF_ENDDEF(ncid)
+        STATUS=NF_GET_VARA_real(NCID,gvfID,START,COUNT,SHDFAC)
+        STATUS=NF_CLOSE(NCID)
+
+        open(30,file='shdfac_chk.dat',status='unknown')
+
+        do i = 1,ix
+        do j = 1,jx
+          write(30,'(3I5,12F8.2)')i,j,landsea(i,j),(shdfac(i,j,im),im=1,12)
+          
+          if(landsea(i,j).eq.1) then
+             shdfacmx(i,j) = shdfac(i,j,1)
+             do im=1,12
+
+               if(shdfac(i,j,im).lt.0.) then
+                 write(*,*) 'veg. fraction on land points < 0)=',i,j,shdfac(i,j,im)
+                 stop
+               end if
+
+               IF(shdfacmx(I,J) < shdfac(I,J,im)) THEN
+                 shdfacmx(I,J) = shdfac(I,J,im)
+               END IF
+
+             end do
+          end if
+        end do
+        end do
+! -------------------------------------------------------
+  END SUBROUTINE READVEG
+! -------------------------------------------------------
+
+END MODULE module_sf_Noahlsm_gridded_input
