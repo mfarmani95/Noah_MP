@@ -4097,11 +4097,11 @@ contains
      S1 = EXP(-H*VAI)
      S2 = EXP(-EXT*VAI)
      IF (IC .EQ. 0) THEN
-        U1 = B - C/ALBGRD(IB)
+        U1 = B - C/MAX(ALBGRD(IB),0.1)
         U2 = B - C*ALBGRD(IB)
         U3 = F + C*ALBGRD(IB)
      ELSE
-        U1 = B - C/ALBGRI(IB)
+        U1 = B - C/MAX(ALBGRI(IB),0.1)
         U2 = B - C*ALBGRI(IB)
         U3 = F + C*ALBGRI(IB)
      END IF
